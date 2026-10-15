@@ -359,7 +359,7 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
     </div>
     <div id="boxCad" class="hidden">
       <h2>Criar meu cadastro</h2>
-      <div class="desc">Preencha seus dados. Você entra com perfil <b>Usuário</b>; o administrador pode ajustar o perfil depois. <i>O primeiro cadastro do sistema vira Administrador.</i></div>
+      <div class="desc">Preencha seus dados. Após criar o cadastro, seu acesso ficará <b>pendente de aprovação do Administrador</b>. Você só poderá entrar na ferramenta depois da liberação.</div>
       <div class="gerr" id="cdErr"></div>
       <form onsubmit="criarCadastro(event)">
         <div class="f-group"><label>Nome completo</label><input id="cdNome"/></div>
@@ -369,7 +369,7 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
         <div class="f-group"><label>Gestor imediato</label><input id="cdGestor" placeholder="Nome do seu gestor"/></div>
         <div class="f-group"><label>Senha</label><div class="pw"><input id="cdPass" type="password" autocomplete="new-password"/><button type="button" class="pw-eye" tabindex="-1" title="Mostrar senha" onclick="verSenha(this)"></button></div></div>
         <div class="f-group"><label>Confirmar senha</label><div class="pw"><input id="cdConf" type="password" autocomplete="new-password"/><button type="button" class="pw-eye" tabindex="-1" title="Mostrar senha" onclick="verSenha(this)"></button></div></div>
-        <button class="gbtn primary" type="submit" style="justify-content:center;text-align:center">Criar cadastro e entrar</button>
+        <button class="gbtn primary" type="submit" style="justify-content:center;text-align:center">Criar cadastro</button>
       </form>
       <div style="text-align:center;font-size:12.5px;color:var(--soft)">Já tem acesso? <button class="glink" type="button" onclick="mostrarCadastro(false)">Entrar</button></div>
     </div>
@@ -378,7 +378,7 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
 <!-- ================= 3) APLICAÇÃO ================= -->
 <div id="app">
   <aside>
-    <div class="brand"><div class="brand-mark"></div><div class="btxt"><div class="bn">Facilita</div><div class="bt">70·70·50 · v24</div></div><button class="sb-tog" id="sbTog" title="Minimizar menu" onclick="toggleMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button></div>
+    <div class="brand"><div class="brand-mark"></div><div class="btxt"><div class="bn">Facilita</div><div class="bt">70·70·50 · v30</div></div><button class="sb-tog" id="sbTog" title="Minimizar menu" onclick="toggleMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button></div>
     <nav id="mainNav"></nav>
     <div class="sync" id="syncBox" onclick="cliqueSync()"><div class="st"><span class="dot"></span><span id="syncTxt">Conectando…</span></div><div class="fn" id="syncFile"></div></div>
     <div class="ufoot">
@@ -626,7 +626,7 @@ function urlApp(){return location.origin+location.pathname;}
 function limpo(o){const c=Object.assign({},o);delete c._s;return c;}
 function sig(o){return JSON.stringify(limpo(o));}
 function hora(){return new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});}
-function perfilParaUser(p){return {id:p.id,nome:p.nome||"",login:p.login||"",email:p.email||"",area:p.area||"",perfil:p.perfil||"usuario",gestor:p.gestor||"",ativo:p.ativo!==false,auto:!!p.auto,ultimo:p.ultimo||"",criado:p.criado||""};}
+function perfilParaUser(p){return {id:p.id,nome:p.nome||"",login:p.login||"",email:p.email||"",area:p.area||"",perfil:p.perfil||"usuario",gestor:p.gestor||"",ativo:p.ativo!==false,auto:!!p.auto,ultimo:p.ultimo||"",criado:p.criado||"",situacao:p.situacao||"ativo"};}
 function semFuncao(m){return /function|schema cache|does not exist|Could not find/i.test(String(m||""));}
 function msgErro(e){
   const m=String((e&&e.message)||e||"");
@@ -679,7 +679,7 @@ async function flush(){
     for(const u of DB.users){
       const k="users|"+u.id;if(!SYNCED.has(k))continue;const s=sig(u);if(SYNCED.get(k)===s)continue;
       if(u.id!==ME.id&&ME.perfil!=="admin"){SYNCED.set(k,s);continue;}
-      const {error}=await SB.from("perfis").update({nome:u.nome,login:u.login,area:u.area,perfil:u.perfil,gestor:u.gestor,ativo:!!u.ativo,ultimo:u.ultimo||null}).eq("id",u.id);
+      const {error}=await SB.from("perfis").update({nome:u.nome,login:u.login,area:u.area,perfil:u.perfil,gestor:u.gestor,ativo:!!u.ativo,situacao:u.situacao||"ativo",ultimo:u.ultimo||null}).eq("id",u.id);
       if(error)throw error;SYNCED.set(k,s);
     }
     const cs=JSON.stringify(DB.cfg);
@@ -739,7 +739,7 @@ async function verificarRemoto(forcar){
     if(LAST_UPD)q=q.gt("upd",LAST_UPD);
     const {data,error}=await q;if(error)throw error;
     data.forEach(r=>{if(aplicarRemoto(r))mudou=true;});
-    await recarregarPerfis();
+    const pa=pendentes().length;await recarregarPerfis();if(pendentes().length!==pa)mudou=true;if(ME.perfil==="admin"&&pendentes().length>pa)toast("🔔 Novo cadastro aguardando sua aprovação.","");
     const eu=porId("users",ME.id);
     if(eu&&!eu.ativo){toast("Seu acesso foi desativado.","err");logout();return;}
     if(mudou||assinatura(DB)!==antes)renderSeguro();
@@ -805,12 +805,14 @@ async function criarCadastro(e){
     if(eU)throw eU;
     if(usado)return er("Este usuário (login) já está em uso. Escolha outro.");
     try{localStorage.setItem(KEEP_KEY,"1");}catch(_){}
-    const {data,error}=await SB.auth.signUp({email,password:pw,options:{data:{nome,login,area:$("cdArea").value.trim(),gestor:$("cdGestor").value.trim()}}});
+    const {data,error}=await SB.auth.signUp({email,password:pw,options:{data:{nome,login,area:$("cdArea").value.trim(),gestor:$("cdGestor").value.trim(),auto:true,origem:"autocadastro"}}});
     if(error)throw error;
     if(data.user&&Array.isArray(data.user.identities)&&!data.user.identities.length)throw new Error("already registered");
     if(!data.session){er("Cadastro criado, mas o banco ainda exige confirmação por e-mail. Peça ao administrador para desligar “Confirm email” no Supabase.");return;}
     ["cdNome","cdLogin","cdEmail","cdArea","cdGestor","cdPass","cdConf"].forEach(id=>$(id).value="");
-    await iniciarSessao(data.session.user,true);
+    await SB.auth.signOut();
+    irParaLogin();
+    erroLogin("Cadastro criado ✅ Seu acesso está pendente de aprovação do Administrador. Aguarde a liberação para entrar.");
   }catch(err){er(msgErro(err));}
   finally{ocupado(btn,false);}
 }
@@ -837,6 +839,8 @@ async function iniciarSessao(user,novo){
   catch(err){irParaLogin();erroLogin("Não foi possível carregar os dados: "+msgErro(err));return;}
   const eu=porId("users",user.id);
   if(!eu){irParaLogin();erroLogin("Seu perfil não foi encontrado no banco. Fale com o administrador.");await SB.auth.signOut();return;}
+  if(eu.situacao==="pendente"){irParaLogin();erroLogin("Seu cadastro está pendente de aprovação do Administrador. Aguarde a liberação para entrar.");await SB.auth.signOut();return;}
+  if(eu.situacao==="recusado"){irParaLogin();erroLogin("Seu cadastro não foi aprovado. Fale com o administrador.");await SB.auth.signOut();return;}
   if(!eu.ativo){irParaLogin();erroLogin("Usuário inativo. Fale com o administrador.");await SB.auth.signOut();return;}
   ME=eu;TROCAR=!!(user.user_metadata&&user.user_metadata.trocar);
   eu.ultimo=agora();
@@ -948,15 +952,15 @@ const MODS=[
   {k:"gov",nome:"Governança",subs:[{t:"cards",l:"Cards",i:"cards"},{t:"timeline",l:"Timeline",i:"timeline"},{t:"ind",l:"Indicador",i:"ind"},{t:"table",l:"Tabela",i:"table"},{t:"lix",l:"Lixeira",i:"lix"}]},
   {k:"fer",nome:"Ferramentas",subs:[{t:"prior",l:"Priorização (Impacto × Esforço)"},{t:"gut",l:"Matriz GUT"},{t:"smart",l:"Metas SMART"},{t:"story",l:"Storytelling"},{t:"farol",l:"Farol de Indicadores"}]},
   {k:"glo",nome:"Glossário",subs:[{t:"termos",l:"Termos e conceitos"}]},
-  {k:"adm",nome:"Painel Admin",admin:true,subs:[{t:"users",l:"Usuários"},{t:"lix",l:"Lixeira"},{t:"log",l:"Log de atividades"},{t:"cfg",l:"Configurações"}]}
+  {k:"adm",nome:"Painel Admin",admin:true,subs:[{t:"users",l:"Usuários"},{t:"apr",l:"Aprovações"},{t:"lix",l:"Lixeira"},{t:"log",l:"Log de atividades"},{t:"cfg",l:"Configurações"}]}
 ];
 function irMod(k){MOD=k;fecharDrawer();renderTudo();window.scrollTo(0,0);}
 function irSub(t){SUB[MOD]=t;renderTudo();window.scrollTo(0,0);}
 function renderNav(){
   $("mainNav").innerHTML='<div class="nav-sec">Módulos</div>'+MODS.filter(m=>!m.admin||ME.perfil==="admin").map(m=>
-    '<button class="'+(MOD===m.k?"active":"")+'" title="'+m.nome+'" onclick="irMod(\''+m.k+'\')">'+ICO[m.k]+'<span class="lbl">'+m.nome+'</span></button>').join("");
+    '<button class="'+(MOD===m.k?"active":"")+'" title="'+m.nome+'" onclick="irMod(\''+m.k+'\')">'+ICO[m.k]+'<span class="lbl">'+m.nome+(m.k==="adm"&&pendentes().length?' <span class="tag" style="background:#FBE9E7;color:#B3200F">'+pendentes().length+'</span>':'')+'</span></button>').join("");
   const mod=MODS.find(m=>m.k===MOD);
-  let h=mod.subs.map(s=>{const nl=(s.t==="lix")?lixItens().length:0;return '<button class="'+(SUB[MOD]===s.t?"active":"")+'" onclick="irSub(\''+s.t+'\')">'+(s.i?ICO[s.i]:"")+s.l+(nl?' <span class="tag" style="background:#FBE9E7;color:#B3200F">'+nl+'</span>':'')+'</button>';}).join("");
+  let h=mod.subs.map(s=>{const nl=(s.t==="lix")?lixItens().length:(s.t==="apr"?pendentes().length:0);return '<button class="'+(SUB[MOD]===s.t?"active":"")+'" onclick="irSub(\''+s.t+'\')">'+(s.i?ICO[s.i]:"")+s.l+(nl?' <span class="tag" style="background:#FBE9E7;color:#B3200F">'+nl+'</span>':'')+'</button>';}).join("");
   if(MOD==="gov")h+='<button class="btn-plus" title="Adicionar dor" onclick="abrirOp()">+</button>';
   $("subtabs").innerHTML=h;
 }
@@ -1542,13 +1546,27 @@ function upF(col,id,campo,valor,rerender){
 }
 function addF(col,obj){obj.id=uid(col.slice(0,3));obj.dono=ME.id;gravar(col,obj);renderFer();}
 function delF(col,id){excluirReg(col,id);renderFer();}
+/* v30: cada ferramenta traz o insumo coerente com sua teoria
+   Impacto x Esforço -> AÇÕES 5W2H (o que fazer primeiro)
+   Matriz GUT        -> CAUSAS RAIZ (qual problema atacar primeiro)
+   Farol             -> INDICADORES impactados pelas minhas ações
+   Fonte: dores criadas pelo usuário ou compartilhadas com ele */
+function minhasDoresFer(){return vivos("oportunidades").filter(o=>o.dono===ME.id||(o.compart||[]).indexOf("__todos")>=0||compartilhadoComigo(o));}
 function trazerOps(col){
   const ja=meus(col).map(x=>x.ref);let n=0;
-  opsVisiveis().forEach(o=>{if(ja.indexOf(o.id)>=0)return;n++;
-    const obj=col==="prior"?{nome:o.titulo,impacto:3,esforco:3,ref:o.id}:{nome:o.titulo,g:3,u:3,t:3,ref:o.id};
-    obj.id=uid(col.slice(0,3));obj.dono=ME.id;obj.upd=agora();DB[col].push(obj);});
-  if(n){salvar();renderFer();toast(n+" dor(es) adicionada(s)","ok");}else toast("Nenhuma dor nova para trazer.","");
+  if(col==="prior"){
+    minhasDoresFer().forEach(o=>acoesDe(o.id).forEach(a=>{if(ja.indexOf(a.id)>=0)return;n++;
+      DB.prior.push({id:uid("pri"),dono:ME.id,upd:agora(),ref:a.id,dor:o.titulo,nome:a.what,impacto:3,esforco:3});}));
+    if(n){salvar();renderFer();toast(n+" ação(ões) adicionada(s) para priorizar","ok");}
+    else toast("Nenhuma ação nova. Cadastre ações 5W2H nas suas dores (ou nas compartilhadas com você).","");
+  }else{
+    minhasDoresFer().forEach(o=>{const c=(o.causa||"").trim();if(!c||ja.indexOf(o.id)>=0)return;n++;
+      DB.gut.push({id:uid("gut"),dono:ME.id,upd:agora(),ref:o.id,dor:o.titulo,nome:c,g:3,u:3,t:3});});
+    if(n){salvar();renderFer();toast(n+" causa(s) raiz adicionada(s) para priorizar","ok");}
+    else toast("Nenhuma causa raiz nova. Preencha o campo Causa raiz nas suas dores.","");
+  }
 }
+function origemFer(it){return it.dor?'<div style="font-size:10.5px;color:var(--mute);margin-top:3px">Dor: '+esc(it.dor)+'</div>':'';}
 function sel15(col,id,campo,v){return '<select onchange="upF(\''+col+'\',\''+id+'\',\''+campo+'\',this.value,true)">'+[1,2,3,4,5].map(n=>'<option '+(n==v?"selected":"")+'>'+n+'</option>').join("")+'</select>';}
 function quadrante(i,e){const ai=i>=3,ae=e>=3;if(ai&&!ae)return{k:"gr",l:"Ganho rápido"};if(ai&&ae)return{k:"ap",l:"Grande aposta"};if(!ai&&!ae)return{k:"pr",l:"Preencher agenda"};return{k:"ev",l:"Evitar"};}
 function prioridadeGUT(t){if(t>=100)return{c:"#B3200F",b:"#FBE9E7",l:"Crítica"};if(t>=50)return{c:"#8A5A00",b:"#FFF6E5",l:"Alta"};if(t>=20)return{c:"#2F3337",b:"#E6E8EB",l:"Média"};return{c:"#5F6368",b:"#EEF0F2",l:"Baixa"};}
@@ -1557,22 +1575,22 @@ function registroUnico(col){let r=meus(col)[0];if(!r){r={id:col+"_"+ME.id,dono:M
 function upUnico(col,campo,valor){const r=registroUnico(col);r[campo]=valor;r.upd=agora();const i=DB[col].findIndex(x=>x.id===r.id);if(i<0)DB[col].push(r);
   clearTimeout(window._tu);window._tu=setTimeout(salvar,500);col==="smart"?gerarSmart():gerarStory();}
 function copiar(id){const t=$(id).textContent;if(!t.trim())return toast("Nada para copiar.","err");navigator.clipboard.writeText(t).then(()=>toast("Copiado! Cole no seu slide.","ok"));}
-const FER_TIT={prior:["Priorização · Impacto × Esforço","Defina onde investir energia primeiro."],gut:["Matriz GUT","Priorize problemas e causas por Gravidade, Urgência e Tendência."],smart:["Metas SMART","Monte objetivos claros e prontos para o slide."],story:["Storytelling","Transforme dados em uma mensagem executiva."],farol:["Farol de Indicadores","Status meta × realizado para o painel executivo."]};
+const FER_TIT={prior:["Priorização · Impacto × Esforço","Priorize as AÇÕES: o que fazer primeiro."],gut:["Matriz GUT","Priorize as CAUSAS RAIZ por Gravidade, Urgência e Tendência."],smart:["Metas SMART","Monte objetivos claros e prontos para o slide."],story:["Storytelling","Transforme dados em uma mensagem executiva."],farol:["Farol de Indicadores","Acompanhe os INDICADORES impactados pelas suas ações: meta × realizado."]};
 function renderFer(){
-  const t=SUB.fer;$("hTitle").textContent=FER_TIT[t][0];$("hSub").textContent=FER_TIT[t][1];
+  const t=SUB.fer;$("hTitle").textContent=FER_TIT[t][0];$("hSub").textContent=FER_TIT[t][1]+" · 🔒 Área pessoal: somente você vê o que preencher aqui.";
   let h="";
   if(t==="prior"){
     const L=meus("prior");
-    h='<div class="pane-card"><div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn primary" onclick="addF(\'prior\',{nome:\'\',impacto:3,esforco:3})">+ Adicionar iniciativa</button><button class="btn" onclick="trazerOps(\'prior\')">Trazer dores da Governança</button></div>'+
-      '<div style="display:grid;grid-template-columns:1.3fr 1fr;gap:18px;align-items:start"><table class="ftbl"><thead><tr><th>#</th><th>Iniciativa</th><th>Impacto</th><th>Esforço</th><th>Quadrante</th><th></th></tr></thead><tbody>'+
-      (L.map((it,i)=>{const q=quadrante(it.impacto,it.esforco);return '<tr><td><b>'+(i+1)+'</b></td><td><input value="'+esc(it.nome)+'" oninput="upF(\'prior\',\''+it.id+'\',\'nome\',this.value)" placeholder="Nome da iniciativa"/></td><td style="width:70px">'+sel15("prior",it.id,"impacto",it.impacto)+'</td><td style="width:70px">'+sel15("prior",it.id,"esforco",it.esforco)+'</td><td><span class="qb '+q.k+'">'+q.l+'</span></td><td><button class="ibtn" onclick="delF(\'prior\',\''+it.id+'\')">✕</button></td></tr>';}).join("")||'<tr><td colspan="6" class="empty">Adicione iniciativas ou traga as dores da Governança.</td></tr>')+
+    h='<div class="pane-card"><div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn primary" onclick="addF(\'prior\',{nome:\'\',impacto:3,esforco:3})">+ Adicionar iniciativa</button><button class="btn" onclick="trazerOps(\'prior\')">Trazer minhas ações 5W2H</button></div>'+
+      '<div style="display:grid;grid-template-columns:1.3fr 1fr;gap:18px;align-items:start"><table class="ftbl"><thead><tr><th>#</th><th>Ação / iniciativa</th><th>Impacto</th><th>Esforço</th><th>Quadrante</th><th></th></tr></thead><tbody>'+
+      (L.map((it,i)=>{const q=quadrante(it.impacto,it.esforco);return '<tr><td><b>'+(i+1)+'</b></td><td><input value="'+esc(it.nome)+'" oninput="upF(\'prior\',\''+it.id+'\',\'nome\',this.value)" placeholder="Ação ou iniciativa"/>'+origemFer(it)+'</td><td style="width:70px">'+sel15("prior",it.id,"impacto",it.impacto)+'</td><td style="width:70px">'+sel15("prior",it.id,"esforco",it.esforco)+'</td><td><span class="qb '+q.k+'">'+q.l+'</span></td><td><button class="ibtn" onclick="delF(\'prior\',\''+it.id+'\')">✕</button></td></tr>';}).join("")||'<tr><td colspan="6" class="empty">Adicione iniciativas ou traga as ações 5W2H das suas dores.</td></tr>')+
       '</tbody></table><div><div class="quad" id="quad"><div class="qa">Grande aposta</div><div class="qe">Evitar</div><div class="qg">Ganho rápido</div><div class="qp">Preencher agenda</div></div>'+
       '<div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--mute);margin-top:6px"><span>↑ Mais esforço</span><span>← Mais impacto</span></div></div></div></div>';
   }else if(t==="gut"){
     const L=meus("gut").map(x=>Object.assign({},x,{tot:(x.g||1)*(x.u||1)*(x.t||1)})).sort((a,b)=>b.tot-a.tot);
-    h='<div class="pane-card"><div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn primary" onclick="addF(\'gut\',{nome:\'\',g:3,u:3,t:3})">+ Adicionar problema</button><button class="btn" onclick="trazerOps(\'gut\')">Trazer dores da Governança</button></div>'+
-      '<table class="ftbl"><thead><tr><th>Rank</th><th>Problema / causa</th><th>Gravidade</th><th>Urgência</th><th>Tendência</th><th>G×U×T</th><th>Prioridade</th><th></th></tr></thead><tbody>'+
-      (L.map((it,i)=>{const p=prioridadeGUT(it.tot);return '<tr><td><b>'+(i+1)+'º</b></td><td><input value="'+esc(it.nome)+'" oninput="upF(\'gut\',\''+it.id+'\',\'nome\',this.value)" placeholder="Problema ou causa"/></td><td style="width:80px">'+sel15("gut",it.id,"g",it.g)+'</td><td style="width:80px">'+sel15("gut",it.id,"u",it.u)+'</td><td style="width:80px">'+sel15("gut",it.id,"t",it.t)+'</td><td><b>'+it.tot+'</b></td><td><span class="pill" style="background:'+p.b+';color:'+p.c+'">'+p.l+'</span></td><td><button class="ibtn" onclick="delF(\'gut\',\''+it.id+'\')">✕</button></td></tr>';}).join("")||'<tr><td colspan="8" class="empty">Nenhum item.</td></tr>')+
+    h='<div class="pane-card"><div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn primary" onclick="addF(\'gut\',{nome:\'\',g:3,u:3,t:3})">+ Adicionar problema</button><button class="btn" onclick="trazerOps(\'gut\')">Trazer minhas causas raiz</button></div>'+
+      '<table class="ftbl"><thead><tr><th>Rank</th><th>Causa raiz / problema</th><th>Gravidade</th><th>Urgência</th><th>Tendência</th><th>G×U×T</th><th>Prioridade</th><th></th></tr></thead><tbody>'+
+      (L.map((it,i)=>{const p=prioridadeGUT(it.tot);return '<tr><td><b>'+(i+1)+'º</b></td><td><input value="'+esc(it.nome)+'" oninput="upF(\'gut\',\''+it.id+'\',\'nome\',this.value)" placeholder="Causa raiz ou problema"/>'+origemFer(it)+'</td><td style="width:80px">'+sel15("gut",it.id,"g",it.g)+'</td><td style="width:80px">'+sel15("gut",it.id,"u",it.u)+'</td><td style="width:80px">'+sel15("gut",it.id,"t",it.t)+'</td><td><b>'+it.tot+'</b></td><td><span class="pill" style="background:'+p.b+';color:'+p.c+'">'+p.l+'</span></td><td><button class="ibtn" onclick="delF(\'gut\',\''+it.id+'\')">✕</button></td></tr>';}).join("")||'<tr><td colspan="8" class="empty">Nenhum item.</td></tr>')+
       '</tbody></table><div style="font-size:11.3px;color:var(--mute);margin-top:10px">Escala 1 a 5 · Crítica ≥ 100 · Alta ≥ 50 · Média ≥ 20</div></div>';
   }else if(t==="smart"){
     const s=registroUnico("smart");
@@ -1587,7 +1605,7 @@ function renderFer(){
       '<div class="pane-card"><h4 style="font-size:11px;text-transform:uppercase;color:var(--soft);margin-bottom:8px;display:flex">Mensagem executiva <button class="btn sm" style="margin-left:auto" onclick="copiar(\'storyOut\')">Copiar</button></h4><div class="out" id="storyOut"></div></div>';
   }else if(t==="farol"){
     const L=meus("farol");
-    h='<div class="pane-card"><div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn primary" onclick="addF(\'farol\',{nome:\'\',unidade:\'%\',direcao:\'maior\',meta:\'\',real:\'\'})">+ Adicionar indicador</button><button class="btn" onclick="trazerIndFarol()">Trazer indicadores cadastrados (último mês)</button></div>'+
+    h='<div class="pane-card"><div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn primary" onclick="addF(\'farol\',{nome:\'\',unidade:\'%\',direcao:\'maior\',meta:\'\',real:\'\'})">+ Adicionar indicador</button><button class="btn" onclick="trazerIndFarol()">Trazer indicadores das minhas ações (último mês)</button></div>'+
       '<table class="ftbl"><thead><tr><th>Indicador</th><th>Unidade</th><th>Direção</th><th>Meta</th><th>Realizado</th><th>Farol</th><th></th></tr></thead><tbody>'+
       (L.map(it=>{const s=ragStatus(it);return '<tr><td><input value="'+esc(it.nome)+'" oninput="upF(\'farol\',\''+it.id+'\',\'nome\',this.value)"/></td><td style="width:90px"><input value="'+esc(it.unidade)+'" oninput="upF(\'farol\',\''+it.id+'\',\'unidade\',this.value)"/></td><td style="width:150px"><select onchange="upF(\'farol\',\''+it.id+'\',\'direcao\',this.value,true)"><option value="maior" '+(it.direcao==="maior"?"selected":"")+'>Maior é melhor</option><option value="menor" '+(it.direcao==="menor"?"selected":"")+'>Menor é melhor</option></select></td><td style="width:100px"><input value="'+esc(it.meta)+'" onchange="upF(\'farol\',\''+it.id+'\',\'meta\',this.value,true)"/></td><td style="width:100px"><input value="'+esc(it.real)+'" onchange="upF(\'farol\',\''+it.id+'\',\'real\',this.value,true)"/></td><td><span class="farol '+s.k+'"></span> '+s.l+'</td><td><button class="ibtn" onclick="delF(\'farol\',\''+it.id+'\')">✕</button></td></tr>';}).join("")||'<tr><td colspan="7" class="empty">Nenhum indicador.</td></tr>')+
       '</tbody></table><div style="font-size:11.3px;color:var(--mute);margin-top:10px">Verde: atingiu a meta · Amarelo: entre 90% e 100% · Vermelho: abaixo de 90%</div></div>';
@@ -1620,25 +1638,44 @@ function gerarStory(){
 }
 function trazerIndFarol(){
   const ja=meus("farol").map(x=>x.ref);let n=0;
-  vivos("indicadores").forEach(i=>{if(ja.indexOf(i.id)>=0)return;const k=ultimoReal(i);
+  const meusInd=new Set();minhasDoresFer().forEach(o=>acoesDe(o.id).forEach(a=>indsDaAcao(a).forEach(x=>meusInd.add(x.i.id))));
+  vivos("indicadores").filter(i=>meusInd.has(i.id)).forEach(i=>{if(ja.indexOf(i.id)>=0)return;const k=ultimoReal(i);
     DB.farol.push({id:uid("far"),dono:ME.id,upd:agora(),ref:i.id,nome:i.nome,unidade:i.unid||"",direcao:i.dir||"maior",meta:k>=0?(i.meta||[])[k]||"":"",real:k>=0?i.real[k]:""});n++;});
-  if(n){salvar();renderFer();toast(n+" indicador(es) adicionado(s)","ok");}else toast("Nenhum indicador novo para trazer.","");
+  if(n){salvar();renderFer();toast(n+" indicador(es) adicionado(s)","ok");}else toast("Nenhum indicador novo. Vincule indicadores impactados nas ações das suas dores.","");
 }
 /* =====================================================================
    PAINEL ADMIN
    ===================================================================== */
-const ADM_TIT={users:["Usuários","Cadastro, perfis e acessos."],lix:["Lixeira","Itens excluídos — restaure ou exclua definitivamente."],log:["Log de atividades","Quem fez o quê e quando."],cfg:["Configurações","Metas dos indicadores desafio, áreas e banco de dados."]};
+const ADM_TIT={users:["Usuários","Cadastro, perfis e acessos."],apr:["Aprovações","Cadastros aguardando sua liberação antes do primeiro acesso."],lix:["Lixeira","Itens excluídos — restaure ou exclua definitivamente."],log:["Log de atividades","Quem fez o quê e quando."],cfg:["Configurações","Metas dos indicadores desafio, áreas e banco de dados."]};
 let LOGF="";
 function renderAdm(){
   if(ME.perfil!=="admin"){MOD="gov";renderTudo();return;}
   const t=SUB.adm;$("hTitle").textContent=ADM_TIT[t][0];$("hSub").textContent=ADM_TIT[t][1];
-  if(t==="users")admUsers();else if(t==="lix")admLix();else if(t==="log")admLog();else admCfg();
+  $("hAct").innerHTML='<button class="btn primary" onclick="baixarBackupExcel()">'+ICO.xls+' Backup completo (Excel)</button>';
+  if(t==="users")admUsers();else if(t==="apr")admApr();else if(t==="lix")admLix();else if(t==="log")admLog();else admCfg();
+}
+function pendentes(){return DB?vivos("users").filter(u=>u.situacao==="pendente"):[];}
+function admApr(){
+  const P=pendentes().sort((a,b)=>(a.criado||"").localeCompare(b.criado||""));
+  const R=vivos("users").filter(u=>u.situacao==="recusado");
+  const row=(u,rec)=>'<tr><td><b>'+esc(u.nome)+'</b></td><td>'+esc(u.login)+'</td><td>'+esc(u.email||"")+'</td><td>'+esc(u.area||"")+'</td><td>'+esc(u.gestor||"—")+'</td><td>'+fmtDH(u.criado)+'</td><td style="white-space:nowrap"><select id="aprP_'+u.id+'" style="width:auto;margin-right:6px"><option value="usuario">Usuário</option><option value="gestor">Gestor</option><option value="admin">Administrador</option></select> <button class="btn sm" style="color:#2E7D4F" onclick="decidirCadastro(\''+u.id+'\',true)">✔ Aprovar</button> '+(rec?'':'<button class="btn sm danger" onclick="decidirCadastro(\''+u.id+'\',false)">✖ Recusar</button>')+'</td></tr>';
+  const head='<table class="ftbl"><thead><tr><th>Nome</th><th>Login</th><th>E-mail</th><th>Área</th><th>Gestor</th><th>Solicitado em</th><th>Decisão</th></tr></thead><tbody>';
+  $("content").innerHTML='<div class="pane-card"><b>Aguardando aprovação</b> <span class="tag">'+P.length+'</span><div style="font-size:11.8px;color:var(--soft);margin:8px 0 12px">Quem usa <b>Criar meu cadastro</b> só entra após sua aprovação. Usuários criados por você em <b>Novo usuário</b> entram liberados.</div>'+(P.length?head+P.map(u=>row(u,false)).join("")+'</tbody></table>':'<div class="empty">Nenhum cadastro aguardando aprovação.</div>')+'</div>'+(R.length?'<div class="pane-card"><b>Recusados</b> <span class="tag">'+R.length+'</span>'+head+R.map(u=>row(u,true)).join("")+'</tbody></table></div>':'');
+}
+async function decidirCadastro(id,aprovar){
+  const u=porId("users",id);if(!u)return;
+  const perfil=($("aprP_"+id)||{}).value||"usuario";
+  if(!confirm((aprovar?"Aprovar o acesso de ":"Recusar o cadastro de ")+u.nome+"?"))return;
+  const dados=aprovar?{situacao:"ativo",ativo:true,perfil}:{situacao:"recusado",ativo:false};
+  const {error}=await SB.from("perfis").update(dados).eq("id",id);
+  if(error){toast(msgErro(error),"err");return;}
+  await recarregarPerfis();registrarLog((aprovar?"Aprovou":"Recusou")+" o cadastro de "+u.nome+".");renderTudo();toast(aprovar?"Acesso aprovado ✅":"Cadastro recusado","ok");
 }
 function admUsers(){
   const L=vivos("users").sort((a,b)=>a.nome.localeCompare(b.nome));
   $("content").innerHTML='<div class="pane-card"><div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap"><button class="btn primary" onclick="abrirUsuario()">+ Novo usuário</button><span style="font-size:11.5px;color:var(--mute);margin-left:8px">A equipe também pode criar o próprio cadastro na tela de login (entra como <b>Usuário</b>). <b>Todos</b> visualizam todas as dores · edita quem criou a dor e as pessoas marcadas em <b>Compartilhar com</b> · <b>Admin</b>: edita e exclui tudo, gerencia perfis e reseta senhas para a padrão <b>'+SENHA_PADRAO+'</b> (sem envio de e-mail)</span></div>'+
     '<table class="ftbl"><thead><tr><th>Nome</th><th>Login</th><th>E-mail</th><th>Área</th><th>Perfil</th><th>Gestor</th><th>Situação</th><th>Último acesso</th><th></th></tr></thead><tbody>'+
-    L.map(u=>'<tr><td><div style="display:flex;align-items:center;gap:8px"><span class="av sm">'+iniciais(u.nome)+'</span><b>'+esc(u.nome)+'</b></div></td><td>'+esc(u.login)+'</td><td>'+esc(u.email||"")+'</td><td>'+esc(u.area||"")+'</td><td><span class="tag">'+(PERFIL_NOME[u.perfil]||u.perfil)+'</span></td><td>'+esc(u.gestor||"—")+'</td><td>'+(u.ativo?'<span class="pill st-Concluída">Ativo</span>':'<span class="pill st-Atrasada">Inativo</span>')+(u.auto?' <span class="tag" title="Cadastro feito pelo próprio usuário">autocadastro</span>':'')+'</td><td>'+fmtDH(u.ultimo)+'</td><td style="white-space:nowrap"><button class="btn sm" onclick="abrirUsuario(\''+u.id+'\')">Editar</button> '+(u.id===ME.id?'':'<button class="btn sm" title="Resetar a senha para a padrão ('+SENHA_PADRAO+')" onclick="resetarSenha(\''+u.id+'\')">🔑 Resetar senha</button>')+'</td></tr>').join("")+
+    L.map(u=>'<tr><td><div style="display:flex;align-items:center;gap:8px"><span class="av sm">'+iniciais(u.nome)+'</span><b>'+esc(u.nome)+'</b></div></td><td>'+esc(u.login)+'</td><td>'+esc(u.email||"")+'</td><td>'+esc(u.area||"")+'</td><td><span class="tag">'+(PERFIL_NOME[u.perfil]||u.perfil)+'</span></td><td>'+esc(u.gestor||"—")+'</td><td>'+(u.situacao==="pendente"?'<span class="pill help-b">⏳ Pendente</span>':u.situacao==="recusado"?'<span class="pill st-Atrasada">Recusado</span>':u.ativo?'<span class="pill st-Concluída">Ativo</span>':'<span class="pill st-Atrasada">Inativo</span>')+(u.auto?' <span class="tag" title="Cadastro feito pelo próprio usuário">autocadastro</span>':'')+'</td><td>'+fmtDH(u.ultimo)+'</td><td style="white-space:nowrap"><button class="btn sm" onclick="abrirUsuario(\''+u.id+'\')">Editar</button> '+(u.id===ME.id?'':'<button class="btn sm" title="Resetar a senha para a padrão ('+SENHA_PADRAO+')" onclick="resetarSenha(\''+u.id+'\')">🔑 Resetar senha</button> <button class="btn sm danger" title="Excluir usuário" onclick="excluirUsuario(\''+u.id+'\')">🗑 Excluir</button>')+'</td></tr>').join("")+
     '</tbody></table></div>';
 }
 function abrirUsuario(id){
@@ -1660,21 +1697,33 @@ async function salvarUsuario(){
   const perfil=$("usPerfil").value,ativo=$("usAtivo").value==="1",area=$("usArea").value.trim(),gestor=$("usGestor").value;
   if(id===ME.id&&(perfil!=="admin"||!ativo))return toast("Você não pode remover seu próprio acesso de administrador.","err");
   if(id){
-    const u=porId("users",id);Object.assign(u,{nome,login,area,perfil,gestor,ativo});
+    const u=porId("users",id);Object.assign(u,{nome,login,area,perfil,gestor,ativo});if(ativo)u.situacao="ativo";
     gravar("users",u,"Editou o usuário "+nome+".");
     fecharModal("mUser");renderTudo();toast("Usuário salvo ✅","ok");return;
   }
   try{
     const tmp=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:"f360-tmp"}});
-    const {data,error}=await tmp.auth.signUp({email,password:SENHA_PADRAO,options:{data:{nome,login,area,gestor,trocar:true}}});
+    const {data,error}=await tmp.auth.signUp({email,password:SENHA_PADRAO,options:{data:{nome,login,area,gestor,trocar:true,auto:false,origem:"admin"}}});
     if(error)throw error;
     if(!data.user||(Array.isArray(data.user.identities)&&!data.user.identities.length))throw new Error("already registered");
-    const {error:e2}=await SB.from("perfis").update({nome,login,area,gestor,perfil,ativo,auto:false}).eq("id",data.user.id);
+    const {error:e2}=await SB.from("perfis").update({nome,login,area,gestor,perfil,ativo,auto:false,situacao:"ativo"}).eq("id",data.user.id);
     if(e2)throw e2;
     await recarregarPerfis();
     registrarLog("Cadastrou o usuário "+nome+" (login: "+login+").");
     fecharModal("mUser");renderTudo();toast("Usuário criado ✅ Login: "+login+" · senha inicial: "+SENHA_PADRAO,"ok");
   }catch(err){toast(msgErro(err),"err");}
+}
+/* v26: exclusão de usuário pelo administrador */
+async function excluirUsuario(id){
+  if(!ME||ME.perfil!=="admin"){toast("Somente o administrador pode excluir usuários.","err");return;}
+  const u=porId("users",id);if(!u)return;
+  if(u.id===ME.id){toast("Você não pode excluir seu próprio usuário administrador.","err");return;}
+  if(!confirm("Excluir o usuário “"+u.nome+"”?\n\nO acesso será removido definitivamente. Dores e ações criadas por esta pessoa serão mantidas no histórico."))return;
+  const {error}=await SB.rpc("excluir_usuario",{alvo:id});
+  if(error){toast(msgErro(error),"err");return;}
+  DB.users=DB.users.filter(x=>x.id!==id);SYNCED.delete("users|"+id);
+  registrarLog("Excluiu o usuário "+u.nome+" (login: "+u.login+").");
+  renderTudo();toast("Usuário excluído ✅","ok");
 }
 /* v22: reset pelo administrador — volta para a senha padrão (claro123), sem e-mail, e exige troca no próximo acesso */
 async function resetarSenha(id){
@@ -1739,7 +1788,7 @@ function admCfg(){
     '<div class="pane-card"><h4 style="font-size:11px;text-transform:uppercase;color:var(--soft);margin-bottom:12px">Banco de dados</h4>'+
     '<div class="info" style="margin-bottom:14px"><div><label>Banco conectado</label>Supabase · online</div><div><label>Última atualização</label>'+fmtDH(DB.meta.atualizado)+'</div>'+
     '<div><label>Registros</label>'+vivos("oportunidades").length+' dores · '+vivos("acoes").length+' ações · '+vivos("indicadores").length+' indicadores</div><div><label>Usuários</label>'+vivos("users").length+'</div></div>'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="baixarBackup()">⬇️ Baixar backup (.json)</button><button class="btn" onclick="$(\'impBk\').click()">⤴️ Mesclar um backup</button><input type="file" id="impBk" accept=".json" class="hidden" onchange="mesclarBackup(event)"/><button class="btn" onclick="cliqueSync()">🔁 Atualizar dados agora</button></div></div>';
+    '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" onclick="baixarBackupExcel()">📊 Backup completo (Excel)</button><button class="btn" onclick="baixarBackup()">⬇️ Backup técnico (.json)</button><button class="btn" onclick="$(\'impBk\').click()">⤴️ Mesclar um backup</button><input type="file" id="impBk" accept=".json" class="hidden" onchange="mesclarBackup(event)"/><button class="btn" onclick="cliqueSync()">🔁 Atualizar dados agora</button></div></div>';
 }
 function salvarCfg(){
   const c=DB.cfg;
@@ -1755,6 +1804,48 @@ function mesclarBackup(ev){
     if(!confirm("Mesclar este backup com o banco atual? Registros mais recentes prevalecem."))return;
     d.users=[];d.log=[];const _us=DB.users,_lg=DB.log;DB=mesclar(DB,d);DB.users=_us;DB.log=_lg;registrarLog("Mesclou um backup no banco.");renderTudo();toast("Backup mesclado ✅","ok");}catch(err){toast("Backup inválido: "+err.message,"err");}ev.target.value="";};
   r.readAsText(f);
+}
+/* =====================================================================
+   v29/v30: BACKUP COMPLETO EM EXCEL (somente Administrador)
+   ===================================================================== */
+function xlsAba(wb,nome,cab,linhas){
+  const ws=XLSX.utils.aoa_to_sheet([cab].concat(linhas));
+  ws["!cols"]=cab.map((c,i)=>{let w=String(c).length;linhas.forEach(l=>{const v=l[i]==null?"":String(l[i]);w=Math.max(w,Math.min(55,v.length));});return{wch:w+2};});
+  ws["!autofilter"]={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(linhas.length,1),c:cab.length-1}})};
+  XLSX.utils.book_append_sheet(wb,ws,nome.slice(0,31));
+}
+function baixarBackupExcel(){
+  if(!ME||ME.perfil!=="admin"){toast("Somente o Administrador pode baixar o backup completo.","err");return;}
+  if(!window.XLSX){toast("A biblioteca do Excel não carregou. Verifique a internet e recarregue.","err");return;}
+  const nu=id=>id?nomeUser(id):"—",ok=x=>x&&!x.purged,sit=x=>x.del?"Lixeira":"Ativo";
+  const comp=o=>(o.compart||[]).map(x=>x==="__todos"?"Todos":nu(x)).join(", ");
+  const wb=XLSX.utils.book_new(),users=DB.users.slice().sort((a,b)=>(a.nome||"").localeCompare(b.nome||""));
+  const ops=DB.oportunidades.filter(ok),acs=DB.acoes.filter(ok),inds=DB.indicadores.filter(ok),fer=c=>DB[c].filter(x=>ok(x)&&!x.del);
+  xlsAba(wb,"Resumo",["Item","Valor"],[
+    ["Ferramenta","FACILITA 360 · Governança 70·70·50"],["Gerado em",fmtDH(agora())],["Gerado por",ME.nome],
+    ["Usuários",users.length],["Dores",ops.length],["Ações 5W2H",acs.length],["Indicadores",inds.length],
+    ["Registros nas Ferramentas",["prior","gut","smart","story","farol"].reduce((n,c)=>n+fer(c).length,0)],
+    ["Linhas de log",DB.log.length],["Como ler","Cada aba mostra quem preencheu e quando. Use os filtros do cabeçalho."]]);
+  xlsAba(wb,"Usuários",["Nome","Login","E-mail","Área","Perfil","Gestor","Situação","Origem","Criado em","Último acesso"],users.map(u=>[
+    u.nome,u.login,u.email||"",u.area||"",PERFIL_NOME[u.perfil]||u.perfil,u.gestor||"",
+    u.situacao==="pendente"?"Pendente":u.situacao==="recusado"?"Recusado":(u.ativo?"Ativo":"Inativo"),u.auto?"Autocadastro":"Criado pelo Admin",fmtDH(u.criado),fmtDH(u.ultimo)]));
+  xlsAba(wb,"Dores",["Indicador desafio","Dor","Área","Patrocinador","Causa raiz","Observações","Status","% conclusão","Preenchido por","Compartilhado com","Criado em","Atualizado em","Situação"],ops.map(o=>[
+    o.desafio||"",o.titulo||"",o.area||"",o.patro||"",o.causa||"",o.obs||"",o.del?"—":stOp(o),o.del?"":pctOp(o),nu(o.dono),comp(o),fmtDH(o.criado),fmtDH(o.upd),sit(o)]));
+  xlsAba(wb,"Ações 5W2H",["Indicador desafio","Dor","O quê","Por quê","Quem","Onde","Como","Início","Fim","Quanto","Status","% conclusão","Indicadores impactados","Projeção de ganho","Autonomia","Ajuda?","Ajuda — quem","Preenchido por","Criado em","Atualizado em","Situação"],acs.map(a=>{const o=porId("oportunidades",a.op)||{};return[
+    o.desafio||"",o.titulo||"(dor não encontrada)",a.what||"",a.why||"",a.who||"",a.where||"",a.how||"",fmtD(a.ini),fmtD(a.fim),a.quanto||"",a.del?"—":stAcao(a),pctAcao(a),indsNomes(a),a.ganho||"",a.autonomia||"",a.ajuda?"Sim":"Não",a.ajuda?(a.ajudaQuem||""):"",nu(a.dono),fmtDH(a.criado),fmtDH(a.upd),sit(a)];}));
+  const mes=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],LI=[];
+  inds.forEach(i=>[["meta","Meta"],["real","Realizado"],["fc","Forecast"],["ant","Real ano anterior"]].forEach(([k,l])=>LI.push(
+    [i.nome,i.area||"",i.desafio||"",i.unid||"",i.dir==="menor"?"Menor é melhor":"Maior é melhor",i.ano||"",l].concat(MESES.map((_,m)=>{const v=(i[k]||[])[m];const n=num(v);return n==null?(v||""):n;})).concat([nu(i.dono),fmtDH(i.upd),sit(i)]))));
+  xlsAba(wb,"Indicadores",["Indicador","Área","Indicador desafio","Unidade","Direção","Ano","Tipo"].concat(mes).concat(["Preenchido por","Atualizado em","Situação"]),LI);
+  xlsAba(wb,"Priorização (ações)",["Preenchido por","Ação / iniciativa","Dor de origem","Impacto","Esforço","Quadrante","Atualizado em"],fer("prior").map(x=>[nu(x.dono),x.nome||"",x.dor||"",x.impacto,x.esforco,quadrante(x.impacto,x.esforco).l,fmtDH(x.upd)]));
+  xlsAba(wb,"Matriz GUT (causas)",["Preenchido por","Causa raiz / problema","Dor de origem","Gravidade","Urgência","Tendência","G×U×T","Prioridade","Atualizado em"],fer("gut").map(x=>{const t=(x.g||1)*(x.u||1)*(x.t||1);return[nu(x.dono),x.nome||"",x.dor||"",x.g,x.u,x.t,t,prioridadeGUT(t).l,fmtDH(x.upd)];}));
+  xlsAba(wb,"Metas SMART",["Preenchido por","S — Específica","M — Mensurável","A — Atingível","R — Relevante","T — Temporal","Responsável","Atualizado em"],fer("smart").map(x=>[nu(x.dono),x.S||"",x.M||"",x.A||"",x.R||"",x.T||"",x.resp||"",fmtDH(x.upd)]));
+  xlsAba(wb,"Storytelling",["Preenchido por","Contexto","Desafio","O que fizemos / faremos","Resultado","Próximos passos","Tom","Atualizado em"],fer("story").map(x=>[nu(x.dono),x.ctx||"",x.prob||"",x.acao||"",x.res||"",x.prox||"",x.tom||"",fmtDH(x.upd)]));
+  xlsAba(wb,"Farol (indicadores)",["Preenchido por","Indicador","Unidade","Direção","Meta","Realizado","Farol","Atualizado em"],fer("farol").map(x=>[nu(x.dono),x.nome||"",x.unidade||"",x.direcao==="menor"?"Menor é melhor":"Maior é melhor",x.meta||"",x.real||"",ragStatus(x).l,fmtDH(x.upd)]));
+  xlsAba(wb,"Log de atividades",["Data/hora","Quem","Atividade"],DB.log.map(l=>[fmtDH(l.upd),l.quem||"",l.texto||""]));
+  const d=new Date(),z=n=>String(n).padStart(2,"0");
+  XLSX.writeFile(wb,"FACILITA360_Backup_"+hojeISO()+"_"+z(d.getHours())+"h"+z(d.getMinutes())+".xlsx");
+  registrarLog("Baixou o backup completo em Excel.");toast("Backup completo gerado ✅","ok");
 }
 /* ---------------- GLOSSÁRIO ---------------- */
 const GLOSSARIO=[
@@ -1795,7 +1886,9 @@ const GLOSSARIO=[
   ["Ishikawa (6M)","Diagrama de causa e efeito que organiza as causas em Método, Máquina, Mão de obra, Material, Medida e Meio ambiente."],
   ["5 Porquês","Perguntar “por quê?” em sequência até chegar à causa raiz."],
   ["Matriz GUT","Prioriza problemas por Gravidade × Urgência × Tendência (notas de 1 a 5)."],
-  ["Impacto × Esforço","Classifica iniciativas em Ganho rápido, Grande aposta, Preencher agenda e Evitar."],
+  ["Impacto × Esforço","Prioriza as AÇÕES (o que fazer primeiro): Ganho rápido, Grande aposta, Preencher agenda e Evitar. Traz as ações 5W2H das suas dores."],
+  ["Matriz GUT (insumo)","Prioriza as CAUSAS RAIZ (qual problema atacar primeiro). Traz o campo Causa raiz das suas dores."],
+  ["Farol (insumo)","Acompanha os INDICADORES impactados pelas suas ações, comparando meta × realizado."],
   ["Meta SMART","Objetivo Específico, Mensurável, Atingível, Relevante e Temporal."],
   ["Storytelling","Mensagem executiva: contexto, desafio, ação, resultado e próximos passos."]]},
  {g:"Acesso e uso",itens:[
