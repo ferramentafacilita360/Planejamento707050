@@ -51,6 +51,12 @@ button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit
 .glink:hover{text-decoration:underline}
 .gfile{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--soft);background:#F4F5F6;border:1px solid var(--border);border-radius:9px;padding:9px 12px;margin-bottom:18px}
 .gfile b{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* v22: olhinho para mostrar/ocultar senha */
+.pw{position:relative}
+.pw input{padding-right:44px!important}
+.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:var(--mute);width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:7px}
+.pw-eye:hover{color:var(--ac);background:#F4F5F6}
+.pw-eye svg{width:18px;height:18px}
 @media(max-width:900px){.gate-left{display:none}.gate-right{width:100%}}
 #app{display:none;min-height:100vh}
 #app.show{display:flex}
@@ -327,9 +333,7 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
 </style>
 </head>
 <body>
-
 <div id="scrConn" class="hidden"></div>
-
 <!-- ================= LOGIN / CADASTRO ================= -->
 <div class="gate" id="scrLogin">
   <div class="gate-left">
@@ -339,19 +343,19 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
     <div class="gl-goals" id="glGoals2"></div>
   </div>
   <div class="gate-right"><div class="gbox">
-    <div class="gfile"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2E7D4F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Banco de dados:</span><b id="lgFile">Supabase · online</b></div>
+    
     <div id="boxLogin">
       <h2>Entrar</h2>
-      <div class="desc">Acesse com seu e-mail e senha.</div>
+      <div class="desc">Acesse com seu usuário (login) e senha.</div>
       <div class="gerr" id="lgErr"></div>
       <form onsubmit="fazerLogin(event)">
-        <div class="f-group"><label>E-mail</label><input id="lgUser" type="email" autocomplete="email" placeholder="seu.nome@claro.com.br"/></div>
-        <div class="f-group"><label>Senha</label><input id="lgPass" type="password" autocomplete="current-password"/></div>
+        <div class="f-group"><label>Usuário (login)</label><input id="lgUser" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Login de rede"/></div>
+        <div class="f-group"><label>Senha</label><div class="pw"><input id="lgPass" type="password" autocomplete="current-password"/><button type="button" class="pw-eye" tabindex="-1" title="Mostrar senha" onclick="verSenha(this)"></button></div></div>
         <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--soft);margin-bottom:16px;cursor:pointer"><input type="checkbox" id="lgKeep" style="accent-color:var(--ac)"/> Manter conectada neste computador</label>
         <button class="gbtn primary" type="submit" style="justify-content:center;text-align:center">Entrar</button>
       </form>
       <div style="text-align:center;margin:4px 0 6px;font-size:12.5px;color:var(--soft)">Ainda não tem acesso? <button class="glink" type="button" onclick="mostrarCadastro(true)">Criar meu cadastro</button></div>
-      <div class="gnote">Esqueceu a senha? Fale com o <b>administrador</b>: ele gera uma <b>senha temporária</b> para você entrar e criar uma nova senha no mesmo acesso.</div>
+      <div class="gnote">🔑 <b>Esqueceu a senha?</b> Solicite ao <b>administrador</b> o reset. A senha volta para a padrão e você cria uma nova no próximo acesso.</div>
     </div>
     <div id="boxCad" class="hidden">
       <h2>Criar meu cadastro</h2>
@@ -359,23 +363,22 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
       <div class="gerr" id="cdErr"></div>
       <form onsubmit="criarCadastro(event)">
         <div class="f-group"><label>Nome completo</label><input id="cdNome"/></div>
-        <div class="f-group"><label>Usuário (login)</label><input id="cdLogin" autocomplete="username" placeholder="Ex: nome.sobrenome"/></div>
-        <div class="f-group"><label>E-mail</label><input id="cdEmail" type="email" autocomplete="email"/></div>
+        <div class="f-group"><label>Usuário (login)</label><input id="cdLogin" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Login de rede"/></div>
+        <div class="f-group"><label>E-mail</label><input id="cdEmail" type="email" autocomplete="email" placeholder="seu.nome@claro.com.br"/></div>
         <div class="f-group"><label>Área</label><input id="cdArea" list="dlAreas"/></div>
         <div class="f-group"><label>Gestor imediato</label><input id="cdGestor" placeholder="Nome do seu gestor"/></div>
-        <div class="f-group"><label>Senha</label><input id="cdPass" type="password" autocomplete="new-password"/></div>
-        <div class="f-group"><label>Confirmar senha</label><input id="cdConf" type="password" autocomplete="new-password"/></div>
+        <div class="f-group"><label>Senha</label><div class="pw"><input id="cdPass" type="password" autocomplete="new-password"/><button type="button" class="pw-eye" tabindex="-1" title="Mostrar senha" onclick="verSenha(this)"></button></div></div>
+        <div class="f-group"><label>Confirmar senha</label><div class="pw"><input id="cdConf" type="password" autocomplete="new-password"/><button type="button" class="pw-eye" tabindex="-1" title="Mostrar senha" onclick="verSenha(this)"></button></div></div>
         <button class="gbtn primary" type="submit" style="justify-content:center;text-align:center">Criar cadastro e entrar</button>
       </form>
       <div style="text-align:center;font-size:12.5px;color:var(--soft)">Já tem acesso? <button class="glink" type="button" onclick="mostrarCadastro(false)">Entrar</button></div>
     </div>
   </div></div>
 </div>
-
 <!-- ================= 3) APLICAÇÃO ================= -->
 <div id="app">
   <aside>
-    <div class="brand"><div class="brand-mark"></div><div class="btxt"><div class="bn">Facilita</div><div class="bt">70·70·50 · v21</div></div><button class="sb-tog" id="sbTog" title="Minimizar menu" onclick="toggleMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button></div>
+    <div class="brand"><div class="brand-mark"></div><div class="btxt"><div class="bn">Facilita</div><div class="bt">70·70·50 · v24</div></div><button class="sb-tog" id="sbTog" title="Minimizar menu" onclick="toggleMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button></div>
     <nav id="mainNav"></nav>
     <div class="sync" id="syncBox" onclick="cliqueSync()"><div class="st"><span class="dot"></span><span id="syncTxt">Conectando…</span></div><div class="fn" id="syncFile"></div></div>
     <div class="ufoot">
@@ -391,10 +394,8 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
     <div class="content" id="content"></div>
   </main>
 </div>
-
 <div class="drawer-bg" id="drBg" onclick="fecharDrawer()"></div>
 <div class="drawer" id="drawer"></div>
-
 <!-- ===== MODAL DOR ===== -->
 <div class="modal-bg" id="mOp">
   <div class="modal">
@@ -406,7 +407,6 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
         <div class="field full"><label>Indicador desafio</label><div class="dsel" id="opDesafio"></div></div>
         <div class="field"><label>Área</label><input id="opArea" list="dlAreas" placeholder="Ex: Operações de Campo"/></div>
         <div class="field"><label>Patrocinador</label><input id="opPatro" list="dlPessoas" placeholder="Quem patrocina"/></div>
-        
         <div class="field full"><label>Causa raiz</label><textarea id="opCausa" placeholder="Causa principal identificada (ex.: resultado do 5 Porquês / Ishikawa)"></textarea></div>
         <div class="field full"><label>Observações</label><textarea id="opObs" placeholder="Contexto, premissas, riscos, dependências"></textarea></div>
         <div class="field full"><label>Compartilhar com <span class="h">— todos visualizam a dor; as pessoas marcadas aqui também podem <b>editar</b> (marque "Todos" para liberar a edição a toda a equipe)</span></label><div class="share" id="opShare"></div></div>
@@ -419,7 +419,6 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
     </div>
   </div>
 </div>
-
 <!-- ===== MODAL AÇÃO 5W2H ===== -->
 <div class="modal-bg" id="mAc">
   <div class="modal">
@@ -438,7 +437,6 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
         <div class="field"><label>Fim</label><input type="date" id="acFim"/></div>
         <div class="field"><label>Quanto (How much)</label><input id="acQuanto" placeholder="Ex: R$ 15.000 ou Sem custo"/></div>
         <div class="field"><label>Status</label><select id="acStatus"><option>Programada</option><option>Em andamento</option><option>Concluída</option></select></div>
-        
         <div class="field"><label>% Conclusão</label><div class="rng"><input type="range" id="acPct" min="0" max="100" step="5" oninput="document.getElementById('acPctV').textContent=this.value+'%'"/><b id="acPctV">0%</b></div></div>
         <div class="field"><label>Ajuda?</label><label class="tgl"><input type="checkbox" id="acAjuda" onchange="document.getElementById('acAjQ').disabled=!this.checked"/> Precisa de ajuda para executar</label></div>
         <div class="field"><label>Ajuda — Quem?</label><input id="acAjQ" list="dlPessoas" placeholder="Quem pode ajudar"/></div>
@@ -452,7 +450,6 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
     </div>
   </div>
 </div>
-
 <!-- ===== MODAL INDICADOR ===== -->
 <div class="modal-bg" id="mInd">
   <div class="modal" style="width:980px">
@@ -469,7 +466,7 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
       </div>
       <div style="margin-top:16px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--soft);margin-bottom:8px">Preenchimento mensal</div>
       <div class="mgrid" id="inMeses"></div>
-      <div style="font-size:11.3px;color:var(--mute);margin-top:8px">Use vírgula ou ponto como decimal. Campos em branco são ignorados no gráfico. A linha <b>Real do ano anterior</b> acompanha o ano selecionado e aparece em cinza no gráfico como comparativo.</div>
+      <div style="font-size:11.3px;color:var(--mute);margin-top:8px"><b>Dica:</b> copie uma linha (ou um bloco) do Excel, clique na célula inicial e cole (Ctrl+V) — os valores são distribuídos pelos meses. Use vírgula ou ponto como decimal. Campos em branco são ignorados no gráfico. A linha <b>Real do ano anterior</b> acompanha o ano selecionado e aparece em cinza no gráfico como comparativo.</div>
     </div>
     <div class="modal-foot">
       <button class="btn danger hidden" id="inDel" onclick="excluirInd()" style="margin-right:auto">Excluir indicador</button>
@@ -478,7 +475,6 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
     </div>
   </div>
 </div>
-
 <!-- ===== MODAL USUÁRIO ===== -->
 <div class="modal-bg" id="mUser">
   <div class="modal" style="width:600px">
@@ -487,7 +483,7 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
       <input type="hidden" id="usId"/>
       <div class="grid2">
         <div class="field full"><label>Nome completo</label><input id="usNome"/></div>
-        <div class="field"><label>Usuário (login)</label><input id="usLogin"/></div>
+        <div class="field"><label>Usuário (login)</label><input id="usLogin" autocapitalize="none" spellcheck="false" placeholder="Login de rede"/></div>
         <div class="field"><label>E-mail</label><input id="usEmail" type="email"/></div>
         <div class="field"><label>Área</label><input id="usArea" list="dlAreas"/></div>
         <div class="field"><label>Perfil</label><select id="usPerfil"><option value="usuario">Usuário</option><option value="gestor">Gestor</option><option value="admin">Administrador</option></select></div>
@@ -502,34 +498,17 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
     </div>
   </div>
 </div>
-
 <!-- ===== MODAL TROCA DE SENHA ===== -->
 <div class="modal-bg" id="mSenha">
   <div class="modal" style="width:420px">
     <div class="modal-head"><h3>Criar sua senha</h3><button class="modal-x" id="mSenhaX" onclick="fecharModal('mSenha')">×</button></div>
     <div class="modal-body">
       <div class="gerr" id="snErr"></div>
-      <div style="font-size:12.3px;color:var(--soft);margin-bottom:12px;line-height:1.5">Defina uma senha pessoal (mínimo de 6 caracteres). Ela substitui a senha temporária.</div>
-      <div class="field" style="margin-bottom:12px"><label>Nova senha</label><input id="snNova" type="password"/></div>
-      <div class="field"><label>Confirmar nova senha</label><input id="snConf" type="password"/></div>
+      <div style="font-size:12.3px;color:var(--soft);margin-bottom:12px;line-height:1.5" id="snTxt">Defina uma senha pessoal (mínimo de 6 caracteres), diferente da senha padrão.</div>
+      <div class="field" style="margin-bottom:12px"><label>Nova senha</label><div class="pw"><input id="snNova" type="password" autocomplete="new-password"/><button type="button" class="pw-eye" tabindex="-1" title="Mostrar senha" onclick="verSenha(this)"></button></div></div>
+      <div class="field"><label>Confirmar nova senha</label><div class="pw"><input id="snConf" type="password" autocomplete="new-password"/><button type="button" class="pw-eye" tabindex="-1" title="Mostrar senha" onclick="verSenha(this)"></button></div></div>
     </div>
     <div class="modal-foot"><button class="btn primary" onclick="salvarTrocaSenha()">Salvar</button></div>
-  </div>
-</div>
-
-<!-- ===== MODAL SENHA TEMPORÁRIA (v21) ===== -->
-<div class="modal-bg" id="mTemp">
-  <div class="modal" style="width:470px">
-    <div class="modal-head"><h3 id="tmpTit">Senha temporária gerada</h3><button class="modal-x" onclick="fecharModal('mTemp')">×</button></div>
-    <div class="modal-body">
-      <div style="font-size:12.8px;color:var(--soft);margin-bottom:12px;line-height:1.5" id="tmpTxt"></div>
-      <div style="display:flex;align-items:center;gap:8px;background:#F4F5F6;border:1px dashed #C9CDD2;border-radius:10px;padding:12px 14px">
-        <code id="tmpPw" style="flex:1;font-size:22px;font-weight:800;letter-spacing:1.5px;color:#1F1F1F"></code>
-        <button class="btn primary" onclick="copiarTemp()">Copiar</button>
-      </div>
-      <div class="ro-banner" style="margin-top:12px;margin-bottom:0">🔒 Envie a senha à pessoa por <b>Teams</b> ou pessoalmente. No próximo acesso ela será obrigada a criar uma senha própria. Esta senha <b>não aparece de novo</b> depois que você fechar esta janela.</div>
-    </div>
-    <div class="modal-foot"><button class="btn" onclick="copiarTemp(true)">Copiar mensagem pronta</button><button class="btn primary" onclick="fecharModal('mTemp')">Concluir</button></div>
   </div>
 </div>
 <datalist id="dlPessoas"></datalist>
@@ -537,8 +516,8 @@ table.tbl{border-collapse:collapse;width:100%;font-size:11.8px}
 <div id="toast"></div>
 <script>
 /* =====================================================================
-   FACILITA 360 · Governança 70·70·50
-   Banco de dados: Supabase (login por e-mail e senha · sem envio de e-mail)
+   FACILITA 360 · Governança 70·70·50 — v22
+   Banco de dados: Supabase · login por USUÁRIO e senha · sem envio de e-mail
    ===================================================================== */
 const APP_ID="facilita360-gov";
 const APP_VER=2;
@@ -553,13 +532,11 @@ const DESAFIOS_PADRAO=[
 const STATUS=["Programada","Em andamento","Concluída","Atrasada"];
 const ST_COR={"Programada":"#A3A8AE","Em andamento":"#4A4F55","Concluída":"#2E7D4F","Atrasada":"#DA291C"};
 const PERFIL_NOME={admin:"Administrador",gestor:"Gestor",usuario:"Usuário"};
-
 let DB=null, ME=null, MOD="gov", SUB={gov:"cards",fer:"prior",glo:"termos",adm:"users"};
 let FH=null, LAST_MOD=0, FLUSHING=false, PENDING=false, FLUSH_T=null, POLL_T=null, SYNC_STATE="";
 let FILTRO={busca:"",status:"",area:"",resp:"",desafio:"",ajuda:"",acoes:true};
 let SORT={k:"desafio",dir:1};
 let CHARTS=[];
-
 const $=id=>document.getElementById(id);
 function uid(p){return (p||"id")+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function agora(){return new Date().toISOString();}
@@ -570,20 +547,15 @@ function fmtD(d){if(!d)return"—";const p=String(d).slice(0,10).split("-");retu
 function fmtDH(iso){if(!iso)return"—";const d=new Date(iso);const p=n=>String(n).padStart(2,"0");return p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear()+" "+p(d.getHours())+":"+p(d.getMinutes());}
 function iniciais(n){if(!n)return"?";const p=String(n).trim().split(/\s+/);return((p[0]||"")[0]||"").toUpperCase()+((p[p.length>1?p.length-1:1]||"")[0]||"").toUpperCase();}
 function num(v){if(v===""||v==null)return null;let s=String(v).trim().replace(/\s/g,"");if(s.indexOf(",")>=0)s=s.replace(/\./g,"").replace(",",".");const n=parseFloat(s);return isNaN(n)?null:n;}
-function toast(m,t){const e=$("toast");e.textContent=m;e.className="show "+(t||"");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),2600);}
+function toast(m,t){const e=$("toast");e.textContent=m;e.className="show "+(t||"");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),3200);}
 const MESES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-/* 🔐 v12: senha com PBKDF2-SHA256 (150 mil iterações) + salt aleatório por usuário — hash irreversível */
+/* v22: senha padrão usada no reset pelo administrador e na criação de usuário pelo Painel Admin */
 const SENHA_PADRAO="claro123";
-function _hex(buf){return Array.from(new Uint8Array(buf)).map(x=>x.toString(16).padStart(2,"0")).join("");}
-async function hashPw(s,salt){
-  salt=salt||_hex(crypto.getRandomValues(new Uint8Array(16)));
-  const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(String(s)),"PBKDF2",false,["deriveBits"]);
-  const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt:new TextEncoder().encode(salt),iterations:150000,hash:"SHA-256"},k,256);
-  return "p2$"+salt+"$"+_hex(bits);
-}
-async function hashLegado(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("f360|"+String(s)));return "s2$"+_hex(b);}
-async function senhaOK(stored,plain){stored=String(stored||"");if(!stored)return false;if(stored.indexOf("p2$")===0){return (await hashPw(plain,stored.split("$")[1]))===stored;}return stored===(await hashLegado(plain));}
-
+/* v22: olhinho para mostrar/ocultar senha */
+const EYE_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+function verSenha(b){const i=b.previousElementSibling;if(!i)return;const mostrar=i.type==="password";i.type=mostrar?"text":"password";b.innerHTML=mostrar?EYE_OFF:EYE_ON;b.title=mostrar?"Ocultar senha":"Mostrar senha";}
+function ocultarSenhas(box){(box?box.querySelectorAll(".pw-eye"):document.querySelectorAll(".pw-eye")).forEach(b=>{const i=b.previousElementSibling;if(i)i.type="password";b.innerHTML=EYE_ON;b.title="Mostrar senha";});}
 /* ---------- banco em memória ---------- */
 function dbVazio(){
   const d={meta:{app:APP_ID,versao:APP_VER,criado:agora(),atualizado:agora()},
@@ -639,8 +611,7 @@ function registrarLog(txt,doSalvar){
   DB.log.unshift({id:uid("log"),upd:agora(),quem:ME?ME.nome:"Sistema",texto:txt});
   if(doSalvar!==false)salvar();
 }
-
-/* ---------- banco de dados: Supabase (v20) ---------- */
+/* ---------- banco de dados: Supabase ---------- */
 const SB_URL="https://mmyvjvpbvzzrmrevurxe.supabase.co";
 const SB_KEY="sb_publishable_F4PuUek6qm35DrZ4rvPUPg_Z0U3a9xD";
 const REG_COLS=["indicadores","oportunidades","acoes","prior","gut","farol","smart","story"];
@@ -649,23 +620,26 @@ const SB_STORE={
   setItem:(k,v)=>{try{(localStorage.getItem(KEEP_KEY)==="0"?sessionStorage:localStorage).setItem(k,v);}catch(e){}},
   removeItem:k=>{try{localStorage.removeItem(k);sessionStorage.removeItem(k);}catch(e){}}
 };
-const SB=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_KEY,{auth:{storage:SB_STORE,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
-let SYNCED=new Map(),SYNC_CFG="",RT_CH=null,RECUPERACAO=false,TROCAR=false,LAST_UPD="",RENDER_T=null;
+const SB=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_KEY,{auth:{storage:SB_STORE,persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}}):null;
+let SYNCED=new Map(),SYNC_CFG="",RT_CH=null,TROCAR=false,LAST_UPD="",RENDER_T=null;
 function urlApp(){return location.origin+location.pathname;}
 function limpo(o){const c=Object.assign({},o);delete c._s;return c;}
 function sig(o){return JSON.stringify(limpo(o));}
 function hora(){return new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});}
 function perfilParaUser(p){return {id:p.id,nome:p.nome||"",login:p.login||"",email:p.email||"",area:p.area||"",perfil:p.perfil||"usuario",gestor:p.gestor||"",ativo:p.ativo!==false,auto:!!p.auto,ultimo:p.ultimo||"",criado:p.criado||""};}
+function semFuncao(m){return /function|schema cache|does not exist|Could not find/i.test(String(m||""));}
 function msgErro(e){
   const m=String((e&&e.message)||e||"");
-  if(/Invalid login/i.test(m))return "E-mail ou senha inválidos.";
-  if(/already registered|already been registered|already exists/i.test(m))return "Este e-mail já tem cadastro. Faça login ou peça ao administrador para resetar a senha.";
+  if(/Invalid login/i.test(m))return "Usuário ou senha inválidos.";
+  if(/already registered|already been registered|already exists/i.test(m))return "Este e-mail já tem cadastro. Entre com seu usuário ou solicite ao administrador o reset da senha.";
+  if(/Database error saving new user|duplicate key|perfis_login_unico/i.test(m))return "Este usuário (login) já está em uso. Escolha outro.";
   if(/Email not confirmed/i.test(m))return "Cadastro pendente de confirmação. Peça ao administrador para desligar “Confirm email” no Supabase.";
   if(/different from the old/i.test(m))return "A nova senha precisa ser diferente da atual.";
   if(/Password should be|weak/i.test(m))return "A senha não atende ao mínimo exigido (6 caracteres ou mais).";
-  if(/rate limit|too many/i.test(m))return "Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.";
+  if(/rate limit|too many|security purposes/i.test(m))return "Muitas tentativas seguidas. Aguarde um minuto e tente de novo.";
   if(/Failed to fetch|NetworkError|Load failed/i.test(m))return "Sem conexão com o banco. Verifique a internet ou se a rede bloqueia o Supabase.";
   if(/row-level security|permission denied/i.test(m))return "Sem permissão para esta operação.";
+  if(semFuncao(m))return "Ajuste do banco pendente: rode o script FACILITA360_v22_ajustes_banco.sql no SQL Editor do Supabase.";
   return m||"Erro inesperado.";
 }
 async function lerTudo(tab,sel,ord){
@@ -716,7 +690,7 @@ async function flush(){
   }catch(e){
     console.warn("[flush]",e);
     setSync("err","Falha ao salvar — tentando de novo");
-    if(/row-level|permission/i.test(String(e&&e.message)))toast(msgErro(e),"err");
+    if(/row-level|permission|duplicate key/i.test(String(e&&e.message)))toast(msgErro(e),"err");
     else setTimeout(flush,5000);
   }finally{
     FLUSHING=false;
@@ -788,7 +762,6 @@ function renderSeguro(){
   renderTudo();
   if($("drawer").classList.contains("show")&&window._drOp){const o=porId("oportunidades",window._drOp);if(o&&!o.del)abrirDrawer(o.id,true);else fecharDrawer();}
 }
-
 /* ---------- entrada: login / cadastro (Supabase Auth) → app ---------- */
 function metasHTML(){
   const ds=(DB&&DB.cfg&&DB.cfg.desafios)||DESAFIOS_PADRAO;
@@ -799,6 +772,7 @@ function irParaLogin(){
   $("scrConn").classList.add("hidden");$("scrLogin").classList.remove("hidden");$("app").classList.remove("show");
   $("glGoals2").innerHTML=metasHTML();
   $("boxLogin").classList.remove("hidden");$("boxCad").classList.add("hidden");
+  ocultarSenhas($("scrLogin"));
   setTimeout(()=>{const el=$("lgUser");if(el&&!el.value)el.focus();},60);
 }
 function mostrarCadastro(on){
@@ -806,19 +780,32 @@ function mostrarCadastro(on){
   if(on)setTimeout(()=>$("cdNome").focus(),60);
 }
 function ocupado(btn,on,txt){if(!btn)return;btn.disabled=on;if(on){btn.dataset.t=btn.textContent;btn.textContent=txt||"Aguarde…";}else if(btn.dataset.t)btn.textContent=btn.dataset.t;}
+/* v22: entrar pelo LOGIN — o banco devolve o e-mail interno da conta */
+async function emailDoLogin(v){
+  v=String(v||"").trim().toLowerCase();
+  if(v.indexOf("@")>=0)return v;       /* também aceita o e-mail, se a pessoa digitar */
+  const {data,error}=await SB.rpc("email_do_login",{p_login:v});
+  if(error)throw error;
+  return data||"";
+}
 async function criarCadastro(e){
   e.preventDefault();
   const nome=$("cdNome").value.trim(),login=$("cdLogin").value.trim().toLowerCase(),email=$("cdEmail").value.trim().toLowerCase(),pw=$("cdPass").value;
   const er=m=>{$("cdErr").textContent=m;$("cdErr").classList.add("show");};
+  $("cdErr").classList.remove("show");
   if(!SB)return er("Não foi possível conectar ao banco (biblioteca do Supabase não carregou).");
-  if(!nome||!login||!email)return er("Preencha nome, usuário e e-mail.");
-  if(/\s/.test(login))return er("O usuário não pode ter espaços.");
+  if(!nome||!login||!email)return er("Preencha nome, usuário (login) e e-mail.");
+  if(/\s|@/.test(login))return er("O usuário (login) não pode ter espaços nem @.");
   if(pw.length<6)return er("A senha deve ter pelo menos 6 caracteres.");
   if(pw!==$("cdConf").value)return er("As senhas não conferem.");
+  if(pw===SENHA_PADRAO)return er("Escolha uma senha diferente da senha padrão.");
   const btn=e.submitter||e.target.querySelector("button[type=submit]");ocupado(btn,true,"Criando cadastro…");
   try{
+    const {data:usado,error:eU}=await SB.rpc("login_em_uso",{p_login:login});
+    if(eU)throw eU;
+    if(usado)return er("Este usuário (login) já está em uso. Escolha outro.");
     try{localStorage.setItem(KEEP_KEY,"1");}catch(_){}
-    const {data,error}=await SB.auth.signUp({email,password:pw,options:{data:{nome,login,area:$("cdArea").value.trim(),gestor:$("cdGestor").value.trim()},}});
+    const {data,error}=await SB.auth.signUp({email,password:pw,options:{data:{nome,login,area:$("cdArea").value.trim(),gestor:$("cdGestor").value.trim()}}});
     if(error)throw error;
     if(data.user&&Array.isArray(data.user.identities)&&!data.user.identities.length)throw new Error("already registered");
     if(!data.session){er("Cadastro criado, mas o banco ainda exige confirmação por e-mail. Peça ao administrador para desligar “Confirm email” no Supabase.");return;}
@@ -829,13 +816,15 @@ async function criarCadastro(e){
 }
 async function fazerLogin(e){
   e.preventDefault();
-  const email=$("lgUser").value.trim().toLowerCase(),pw=$("lgPass").value;
+  const user=$("lgUser").value.trim(),pw=$("lgPass").value;
   $("lgErr").classList.remove("show");
   if(!SB)return erroLogin("Não foi possível conectar ao banco (biblioteca do Supabase não carregou). Verifique a internet.");
-  if(!email||!pw)return erroLogin("Informe e-mail e senha.");
+  if(!user||!pw)return erroLogin("Informe usuário (login) e senha.");
   const btn=e.submitter||e.target.querySelector("button[type=submit]");ocupado(btn,true,"Entrando…");
   try{
     try{localStorage.setItem(KEEP_KEY,$("lgKeep").checked?"1":"0");}catch(_){}
+    const email=await emailDoLogin(user);
+    if(!email)throw new Error("Invalid login");
     const {data,error}=await SB.auth.signInWithPassword({email,password:pw});
     if(error)throw error;
     $("lgPass").value="";
@@ -854,14 +843,14 @@ async function iniciarSessao(user,novo){
   gravar("users",eu,novo?(eu.nome+" criou o próprio cadastro."+(eu.perfil==="admin"?" (primeiro acesso — Administrador)":"")):(eu.nome+" entrou no sistema."));
   entrarApp();
   if(novo)toast(eu.perfil==="admin"?"Cadastro criado ✅ Você é o Administrador.":"Cadastro criado ✅ Bem-vinda(o)!","ok");
-  if(TROCAR||RECUPERACAO){RECUPERACAO=false;abrirTrocaSenha(true);}
+  if(TROCAR)abrirTrocaSenha(true);
 }
 const MENU_KEY="f360gov_menu_min";
 function aplicarMenu(){
   const min=localStorage.getItem(MENU_KEY)==="1";
   $("app").classList.toggle("col",min);
   const t=$("sbTog");if(t)t.title=min?"Expandir menu":"Minimizar menu";
-  const sb=$("syncBox");if(sb&&min)sb.title=($("syncTxt").textContent||"")+(FH?" · "+FH.name:"");
+  const sb=$("syncBox");if(sb&&min)sb.title=($("syncTxt").textContent||"");
   const uf=$("ufAv");if(uf)uf.title=ME?(ME.nome+" · "+(PERFIL_NOME[ME.perfil]||ME.perfil)):"";
 }
 function toggleMenu(){
@@ -883,6 +872,7 @@ async function logout(){
   if(ME){registrarLog(ME.nome+" saiu do sistema.",false);clearTimeout(FLUSH_T);try{await flush();}catch(e){}}
   pararRealtime();pararPolling();
   ME=null;fecharDrawer();
+  $("mSenha").dataset.obrig="";$("mSenha").classList.remove("show");
   try{if(SB)await SB.auth.signOut();}catch(e){}
   try{localStorage.removeItem(KEEP_KEY);}catch(e){}
   $("lgPass").value="";
@@ -890,6 +880,8 @@ async function logout(){
 }
 function abrirTrocaSenha(obrig){
   $("snErr").classList.remove("show");$("snNova").value="";$("snConf").value="";
+  $("snTxt").innerHTML=obrig?"Você entrou com a <b>senha padrão</b>. Para continuar, crie uma senha pessoal (mínimo de 6 caracteres).":"Defina uma senha pessoal (mínimo de 6 caracteres), diferente da senha padrão.";
+  ocultarSenhas($("mSenha"));
   $("mSenhaX").classList.toggle("hidden",!!obrig);
   $("mSenha").dataset.obrig=obrig?"1":"";
   abrirModal("mSenha");setTimeout(()=>$("snNova").focus(),60);
@@ -899,6 +891,7 @@ async function salvarTrocaSenha(){
   const er=m=>{$("snErr").textContent=m;$("snErr").classList.add("show");};
   if(n.length<min)return er("Mínimo de "+min+" caracteres.");
   if(n!==c)return er("As senhas não conferem.");
+  if(n===SENHA_PADRAO)return er("Escolha uma senha diferente da senha padrão.");
   const {error}=await SB.auth.updateUser({password:n,data:{trocar:false}});
   if(error)return er(msgErro(error));
   TROCAR=false;
@@ -907,22 +900,20 @@ async function salvarTrocaSenha(){
 }
 function abrirModal(id){$(id).classList.add("show");}
 function fecharModal(id){
-  if(id==="mTemp"){TEMP_INFO=null;$("tmpPw").textContent="";}
   if(id==="mSenha"&&$("mSenha").dataset.obrig==="1")return;
   $(id).classList.remove("show");
   if(window._renderPend&&!document.querySelector(".modal-bg.show")){window._renderPend=false;renderSeguro();}
 }
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){const m=[...document.querySelectorAll(".modal-bg.show")].pop();if(m)fecharModal(m.id);else if($("drawer").classList.contains("show"))fecharDrawer();}});
-
 /* ---------- permissões ---------- */
 function verTudo(){return ME&&(ME.perfil==="admin"||ME.perfil==="gestor");}
 function meusIds(){return [norm(ME.id),norm(ME.nome),norm(ME.login)];}
 function timeDoGestor(){if(!ME||ME.perfil!=="gestor")return[];return vivos("users").filter(u=>norm(u.gestor)===norm(ME.nome)).map(u=>u.id);}
 function compartilhadoComigo(o){const c=(o.compart||[]).map(norm);return c.some(x=>meusIds().indexOf(x)>=0);}
-function podeVer(o){return !!ME;}   /* v12: todos visualizam todas as dores */
-function podeEditar(o){            /* v12: edita quem criou ou quem foi marcado em "Compartilhar com" */
+function podeVer(o){return !!ME;}   /* todos visualizam todas as dores */
+function podeEditar(o){            /* edita quem criou ou quem foi marcado em "Compartilhar com" */
   if(!ME||!o)return false;
-  if(ME.perfil==="admin")return true;   /* v13: administrador edita e exclui tudo */
+  if(ME.perfil==="admin")return true;   /* administrador edita e exclui tudo */
   if(o.dono===ME.id)return true;
   if((o.compart||[]).indexOf("__todos")>=0)return true;
   return compartilhadoComigo(o);
@@ -940,7 +931,6 @@ function atualizarDatalists(){
 }
 function desafios(){return DB.cfg.desafios;}
 function desafioCor(k){const d=desafios().find(x=>x.k===k);return d?d.cor:"#8E9399";}
-
 /* ---------- navegação ---------- */
 const ICO={
   lix:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
@@ -1019,7 +1009,6 @@ function opsFiltradas(ignStatus){
 const ORD_ST={"Atrasada":0,"Em andamento":1,"Programada":2,"Concluída":3};
 function fimOp(o){const ac=acoesDe(o.id).filter(a=>a.fim);return ac.length?ac.map(a=>a.fim).sort().pop():"";}
 function iniOp(o){const ac=acoesDe(o.id).map(a=>a.ini||a.fim).filter(Boolean);return ac.length?ac.sort()[0]:"";}
-
 function renderGov(){
   $("hTitle").textContent="Governança";
   $("hSub").textContent="Continuidade do mapeamento de dores — planos 5W2H por indicador desafio, rumo ao 70 · 70 · 50.";
@@ -1061,7 +1050,6 @@ function renderGovCorpo(){
   const v=SUB.gov;
   if(v==="cards")renderCards();else if(v==="timeline")renderTimeline();else if(v==="table")renderTabela();
 }
-
 /* ---------------- CARDS (faixas horizontais por desafio) ---------------- */
 function miniTL(o){
   const ac=acoesDe(o.id).filter(a=>a.ini||a.fim);
@@ -1089,7 +1077,7 @@ function cardOp(o){
     (ganhos.length?'<div style="color:#2E7D4F;font-weight:700" title="'+esc(ganhos.join(" | "))+'">📈 '+esc(ganhos.join(" · "))+'</div>':'')+'</div>'+
   '</div>';
 }
-let BANDA_ABERTA={};   /* v14: faixas começam minimizadas; clique abre/fecha */
+let BANDA_ABERTA={};   /* faixas começam minimizadas; clique abre/fecha */
 function toggleBanda(k){BANDA_ABERTA[k]=!BANDA_ABERTA[k];renderCards();}
 function renderCards(){
   const ops=opsFiltradas(false);
@@ -1114,9 +1102,8 @@ function renderCards(){
   });
   $("gvView").innerHTML=h;
 }
-
 /* ---------------- TIMELINE ---------------- */
-/* v19: timeline mantém as cores originais (status e indicadores desafio) */
+/* timeline mantém as cores originais (status e indicadores desafio) */
 const TL_COR={"Programada":"#F59E0B","Em andamento":"#0EA5E9","Concluída":"#10B981","Atrasada":"#EF4444"};
 const TL_DES={"NPS":"#6366F1","Receita":"#10B981","Margem EBITDA":"#F59E0B"};
 function tlDesCor(k,cor){return TL_DES[k]||cor||"#94A0B5";}
@@ -1159,7 +1146,6 @@ function renderTimeline(){
   h+='</div></div><div style="display:flex;gap:14px;margin-top:10px;font-size:11.3px;color:var(--soft)">'+STATUS.map(s=>'<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:11px;height:11px;border-radius:50%;background:'+TL_COR[s]+'"></span>'+s+'</span>').join("")+'<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:2px;height:12px;background:var(--ac)"></span>Hoje</span></div>';
   $("gvView").innerHTML=h;
 }
-
 function tlTip(ev,id){
   const a=porId("acoes",id);if(!a)return;
   const o=porId("oportunidades",a.op),sa=stAcao(a);
@@ -1230,7 +1216,6 @@ function exportarExcel(){
   toast("Exportado ✅","ok");
 }
 function baixar(nome,txt,tipo){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:tipo||"application/json"}));a.download=nome;a.click();}
-
 /* ---------------- DRAWER ---------------- */
 function abrirDrawer(id){
   const o=porId("oportunidades",id);if(!o||o.del)return;
@@ -1263,7 +1248,6 @@ function abrirDrawer(id){
   $("drawer").innerHTML=h;$("drawer").classList.add("show");$("drBg").classList.add("show");
 }
 function fecharDrawer(){$("drawer").classList.remove("show");$("drBg").classList.remove("show");window._drOp=null;}
-
 /* ---------------- MODAL DOR ---------------- */
 function abrirOp(id,desafioPre){
   const o=id?porId("oportunidades",id):null;
@@ -1314,16 +1298,6 @@ function excluirAcaoId(id){
   toast("Ação enviada para a Lixeira 🗑️","ok");
 }
 function excluirOp(){excluirOpId($("opId").value);}
-function excluirOpOld(){
-  const id=$("opId").value,o=porId("oportunidades",id);if(!o)return;
-  if(!confirm("Excluir a dor “"+o.titulo+"” e suas ações?\n(Fica na Lixeira do Painel Admin e pode ser restaurada.)"))return;
-  const quando=agora();
-  acoesDe(id).forEach(a=>{a.del=true;a.delPor=ME.nome;a.delEm=quando;a.upd=quando;});
-  o.del=true;o.delPor=ME.nome;o.delEm=quando;o.upd=quando;
-  registrarLog("Excluiu a dor “"+o.titulo+"”.");
-  fecharModal("mOp");fecharDrawer();renderTudo();toast("Excluída (Lixeira).","ok");
-}
-
 /* ---------------- MODAL AÇÃO ---------------- */
 function abrirAcao(opId,acId){
   const o=porId("oportunidades",opId);if(!o)return;
@@ -1373,7 +1347,7 @@ function salvarAcao(){
   fecharModal("mAc");renderTudo();if(window._drOp)abrirDrawer(window._drOp);
   toast("Ação salva ✅","ok");
 }
-/* v15: indicadores impactados da ação (vários), cada um com sua projeção de ganho */
+/* indicadores impactados da ação (vários), cada um com sua projeção de ganho */
 function indsDaAcao(a){
   let L=Array.isArray(a.inds)?a.inds:null;
   if(!L){const o=porId("oportunidades",a.op);const id=a.ind||(o&&o.ind)||"";L=id?[{id:id,ganho:(String(a.ganho||"").replace("−","-").match(/[-+]?\d+(?:[.,]\d+)?/)||[""])[0]}]:[];}
@@ -1392,13 +1366,6 @@ function renderAcInds(sel){
 }
 function togIndAc(cb){const r=cb.closest(".indrow");r.classList.toggle("on",cb.checked);const g=r.querySelector("input[data-g]");g.disabled=!cb.checked;if(cb.checked)g.focus();else g.value="";}
 function excluirAcao(){excluirAcaoId($("acId").value);}
-function excluirAcaoOld(){
-  const id=$("acId").value,a=porId("acoes",id);if(!a)return;
-  if(!confirm("Excluir a ação “"+a.what+"”?"))return;
-  excluirReg("acoes",id,"Excluiu a ação “"+a.what+"”.");
-  fecharModal("mAc");renderTudo();if(window._drOp)abrirDrawer(window._drOp);
-}
-
 /* ---------------- INDICADORES (seletor + gráfico 70% + painel 30% + projeção de ganho das ações) ---------------- */
 let FIND={busca:"",area:"",desafio:"",sel:""};
 function podeEditarInd(i){return ME.perfil==="admin"||ME.perfil==="gestor"||i.dono===ME.id;}
@@ -1421,9 +1388,9 @@ function variacao(i,atual,base){
   return{txt:fD(i,d),sub:sub,cls:igual?"":(melhor?"good":"bad"),seta:igual?"→":(d>0?"▲":"▼")};
 }
 function media(arr){const v=arr.filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;}
-/* v15: ganho de uma ação para um indicador específico */
+/* ganho de uma ação para um indicador específico */
 function ganhoStrInd(a,i){const x=indsDaAcao(a).find(z=>z.i.id===i.id);return x?x.g:"";}
-/* v17: o usuário digita só a melhoria (sem sinal); a direção do indicador define se reduz ou aumenta */
+/* o usuário digita só a melhoria (sem sinal); a direção do indicador define se reduz ou aumenta */
 function ganhoAbs(g){const s=String(g||"").replace(/\s/g,"").match(/\d+(?:[.,]\d+)?/);return s?Math.abs(num(s[0])):null;}
 function ganhoSinal(i,g){const v=ganhoAbs(g);return v==null?null:(i.dir==="menor"?-v:v);}
 function ganhoFmt(i,g){const v=ganhoSinal(i,g);if(v==null)return"";return (v>0?"+":v<0?"−":"")+Math.abs(v).toLocaleString("pt-BR",{maximumFractionDigits:2})+(i.unid?(norm(i.unid)==="%"?" p.p.":" "+i.unid):"");}
@@ -1590,7 +1557,6 @@ function registroUnico(col){let r=meus(col)[0];if(!r){r={id:col+"_"+ME.id,dono:M
 function upUnico(col,campo,valor){const r=registroUnico(col);r[campo]=valor;r.upd=agora();const i=DB[col].findIndex(x=>x.id===r.id);if(i<0)DB[col].push(r);
   clearTimeout(window._tu);window._tu=setTimeout(salvar,500);col==="smart"?gerarSmart():gerarStory();}
 function copiar(id){const t=$(id).textContent;if(!t.trim())return toast("Nada para copiar.","err");navigator.clipboard.writeText(t).then(()=>toast("Copiado! Cole no seu slide.","ok"));}
-
 const FER_TIT={prior:["Priorização · Impacto × Esforço","Defina onde investir energia primeiro."],gut:["Matriz GUT","Priorize problemas e causas por Gravidade, Urgência e Tendência."],smart:["Metas SMART","Monte objetivos claros e prontos para o slide."],story:["Storytelling","Transforme dados em uma mensagem executiva."],farol:["Farol de Indicadores","Status meta × realizado para o painel executivo."]};
 function renderFer(){
   const t=SUB.fer;$("hTitle").textContent=FER_TIT[t][0];$("hSub").textContent=FER_TIT[t][1];
@@ -1658,7 +1624,6 @@ function trazerIndFarol(){
     DB.farol.push({id:uid("far"),dono:ME.id,upd:agora(),ref:i.id,nome:i.nome,unidade:i.unid||"",direcao:i.dir||"maior",meta:k>=0?(i.meta||[])[k]||"":"",real:k>=0?i.real[k]:""});n++;});
   if(n){salvar();renderFer();toast(n+" indicador(es) adicionado(s)","ok");}else toast("Nenhum indicador novo para trazer.","");
 }
-
 /* =====================================================================
    PAINEL ADMIN
    ===================================================================== */
@@ -1671,24 +1636,25 @@ function renderAdm(){
 }
 function admUsers(){
   const L=vivos("users").sort((a,b)=>a.nome.localeCompare(b.nome));
-  $("content").innerHTML='<div class="pane-card"><div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap"><button class="btn primary" onclick="abrirUsuario()">+ Novo usuário</button><span style="font-size:11.5px;color:var(--mute);margin-left:8px">A equipe também pode criar o próprio cadastro na tela de login (entra como <b>Usuário</b>). <b>Todos</b> visualizam todas as dores · edita quem criou a dor e as pessoas marcadas em <b>Compartilhar com</b> · <b>Admin</b>: edita e exclui tudo, gerencia perfis e reseta senhas (gera senha temporária, sem envio de e-mail)</span></div>'+
+  $("content").innerHTML='<div class="pane-card"><div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap"><button class="btn primary" onclick="abrirUsuario()">+ Novo usuário</button><span style="font-size:11.5px;color:var(--mute);margin-left:8px">A equipe também pode criar o próprio cadastro na tela de login (entra como <b>Usuário</b>). <b>Todos</b> visualizam todas as dores · edita quem criou a dor e as pessoas marcadas em <b>Compartilhar com</b> · <b>Admin</b>: edita e exclui tudo, gerencia perfis e reseta senhas para a padrão <b>'+SENHA_PADRAO+'</b> (sem envio de e-mail)</span></div>'+
     '<table class="ftbl"><thead><tr><th>Nome</th><th>Login</th><th>E-mail</th><th>Área</th><th>Perfil</th><th>Gestor</th><th>Situação</th><th>Último acesso</th><th></th></tr></thead><tbody>'+
-    L.map(u=>'<tr><td><div style="display:flex;align-items:center;gap:8px"><span class="av sm">'+iniciais(u.nome)+'</span><b>'+esc(u.nome)+'</b></div></td><td>'+esc(u.login)+'</td><td>'+esc(u.email||"")+'</td><td>'+esc(u.area||"")+'</td><td><span class="tag">'+(PERFIL_NOME[u.perfil]||u.perfil)+'</span></td><td>'+esc(u.gestor||"—")+'</td><td>'+(u.ativo?'<span class="pill st-Concluída">Ativo</span>':'<span class="pill st-Atrasada">Inativo</span>')+(u.auto?' <span class="tag" title="Cadastro feito pelo próprio usuário">autocadastro</span>':'')+'</td><td>'+fmtDH(u.ultimo)+'</td><td style="white-space:nowrap"><button class="btn sm" onclick="abrirUsuario(\''+u.id+'\')">Editar</button> <button class="btn sm" title="Gerar senha temporária" onclick="resetarSenha(\''+u.id+'\')">🔑 Resetar senha</button></td></tr>').join("")+
+    L.map(u=>'<tr><td><div style="display:flex;align-items:center;gap:8px"><span class="av sm">'+iniciais(u.nome)+'</span><b>'+esc(u.nome)+'</b></div></td><td>'+esc(u.login)+'</td><td>'+esc(u.email||"")+'</td><td>'+esc(u.area||"")+'</td><td><span class="tag">'+(PERFIL_NOME[u.perfil]||u.perfil)+'</span></td><td>'+esc(u.gestor||"—")+'</td><td>'+(u.ativo?'<span class="pill st-Concluída">Ativo</span>':'<span class="pill st-Atrasada">Inativo</span>')+(u.auto?' <span class="tag" title="Cadastro feito pelo próprio usuário">autocadastro</span>':'')+'</td><td>'+fmtDH(u.ultimo)+'</td><td style="white-space:nowrap"><button class="btn sm" onclick="abrirUsuario(\''+u.id+'\')">Editar</button> '+(u.id===ME.id?'':'<button class="btn sm" title="Resetar a senha para a padrão ('+SENHA_PADRAO+')" onclick="resetarSenha(\''+u.id+'\')">🔑 Resetar senha</button>')+'</td></tr>').join("")+
     '</tbody></table></div>';
 }
 function abrirUsuario(id){
   const u=id?porId("users",id):null;
   $("mUserTit").textContent=u?"Editar usuário":"Novo usuário";
   $("usId").value=u?u.id:"";$("usNome").value=u?u.nome:"";$("usLogin").value=u?u.login:"";$("usEmail").value=u?u.email||"":"";
-  $("usEmail").disabled=!!u;$("usEmail").title=u?"O e-mail de acesso não pode ser alterado por aqui.":"";
+  $("usEmail").disabled=!!u;$("usEmail").title=u?"O e-mail da conta não pode ser alterado por aqui.":"";
   $("usArea").value=u?u.area||"":"";$("usPerfil").value=u?u.perfil:"usuario";$("usAtivo").value=u&&!u.ativo?"0":"1";
   $("usGestor").innerHTML='<option value="">—</option>'+vivos("users").filter(x=>(x.perfil==="gestor"||x.perfil==="admin")&&(!u||x.id!==u.id)).map(x=>'<option '+(u&&u.gestor===x.nome?"selected":"")+'>'+esc(x.nome)+'</option>').join("");
-  $("usSenhaBox").innerHTML=u?'<label>Senha</label><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button type="button" class="btn" onclick="resetarSenha(\''+u.id+'\')">🔑 Resetar senha</button><span class="h" style="font-size:11.5px;color:var(--mute)">Gera uma <b>senha temporária</b> para você repassar. A pessoa cria uma senha própria no próximo acesso.</span></div>':'<label>Senha inicial</label><div style="font-size:12.5px;padding:9px 11px;background:#F4F5F6;border:1px dashed var(--border);border-radius:8px">Ao salvar, o sistema gera uma <b>senha temporária</b> para você repassar. A pessoa cria uma senha própria no 1º acesso. O <b>e-mail</b> é obrigatório (é o login de acesso).</div>';
+  $("usSenhaBox").innerHTML=u?(u.id===ME.id?'<label>Senha</label><div style="font-size:12.5px;color:var(--soft)">Para trocar a sua senha, use o <b>cadeado</b> ao lado do seu nome, no rodapé do menu.</div>':'<label>Senha</label><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button type="button" class="btn" onclick="resetarSenha(\''+u.id+'\')">🔑 Resetar para a senha padrão</button><span class="h" style="font-size:11.5px;color:var(--mute)">A senha volta para <b>'+SENHA_PADRAO+'</b> e a troca é exigida no próximo acesso.</span></div>'):'<label>Senha inicial</label><div style="font-size:12.5px;padding:9px 11px;background:#F4F5F6;border:1px dashed var(--border);border-radius:8px">O usuário entra com o <b>login</b> e a senha padrão <b>'+SENHA_PADRAO+'</b>, e cria uma senha pessoal no 1º acesso. O e-mail é obrigatório para criar a conta (não é enviado nenhum e-mail).</div>';
   abrirModal("mUser");setTimeout(()=>$("usNome").focus(),60);
 }
 async function salvarUsuario(){
   const id=$("usId").value,nome=$("usNome").value.trim(),login=$("usLogin").value.trim().toLowerCase(),email=$("usEmail").value.trim().toLowerCase();
-  if(!nome||!login)return toast("Preencha nome e login.","err");
+  if(!nome||!login)return toast("Preencha nome e usuário (login).","err");
+  if(/\s|@/.test(login))return toast("O usuário (login) não pode ter espaços nem @.","err");
   if(!id&&!email)return toast("Informe o e-mail do usuário.","err");
   if(vivos("users").some(u=>norm(u.login)===login&&u.id!==id))return toast("Já existe um usuário com esse login.","err");
   const perfil=$("usPerfil").value,ativo=$("usAtivo").value==="1",area=$("usArea").value.trim(),gestor=$("usGestor").value;
@@ -1700,45 +1666,26 @@ async function salvarUsuario(){
   }
   try{
     const tmp=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:"f360-tmp"}});
-    const pw=gerarSenhaTemp();
-    const {data,error}=await tmp.auth.signUp({email,password:pw,options:{data:{nome,login,area,gestor,trocar:true}}});
+    const {data,error}=await tmp.auth.signUp({email,password:SENHA_PADRAO,options:{data:{nome,login,area,gestor,trocar:true}}});
     if(error)throw error;
     if(!data.user||(Array.isArray(data.user.identities)&&!data.user.identities.length))throw new Error("already registered");
     const {error:e2}=await SB.from("perfis").update({nome,login,area,gestor,perfil,ativo,auto:false}).eq("id",data.user.id);
     if(e2)throw e2;
     await recarregarPerfis();
-    registrarLog("Cadastrou o usuário "+nome+" ("+email+").");
-    fecharModal("mUser");renderTudo();mostrarTemp({nome,email},pw,true);
+    registrarLog("Cadastrou o usuário "+nome+" (login: "+login+").");
+    fecharModal("mUser");renderTudo();toast("Usuário criado ✅ Login: "+login+" · senha inicial: "+SENHA_PADRAO,"ok");
   }catch(err){toast(msgErro(err),"err");}
 }
-/* v21: reset de senha pelo administrador, sem e-mail — gera senha temporária e exige troca no próximo acesso */
-function gerarSenhaTemp(){
-  const L="ABCDEFGHJKMNPQRSTUVWXYZ",N="23456789",r=new Uint32Array(6);crypto.getRandomValues(r);
-  return "Claro-"+L[r[0]%L.length]+N[r[1]%N.length]+L[r[2]%L.length]+N[r[3]%N.length]+L[r[4]%L.length]+N[r[5]%N.length];
-}
-let TEMP_INFO=null;
-function mostrarTemp(u,pw,novo){
-  TEMP_INFO={nome:u.nome,email:u.email,pw:pw,url:urlApp()};
-  $("tmpTit").textContent=novo?"Usuário criado ✅":"Senha resetada ✅";
-  $("tmpTxt").innerHTML=(novo?"Acesso criado para ":"Nova senha temporária de ")+"<b>"+esc(u.nome)+"</b> · login: <b>"+esc(u.email||"—")+"</b>";
-  $("tmpPw").textContent=pw;
-  abrirModal("mTemp");
-}
-function copiarTemp(msg){
-  if(!TEMP_INFO)return;
-  const t=msg?("Olá, "+TEMP_INFO.nome.split(" ")[0]+"! Seu acesso ao FACILITA 360 · Governança:\n"+TEMP_INFO.url+"\nLogin: "+TEMP_INFO.email+"\nSenha temporária: "+TEMP_INFO.pw+"\nNo primeiro acesso, o sistema vai pedir para você criar uma senha própria."):TEMP_INFO.pw;
-  navigator.clipboard.writeText(t).then(()=>toast(msg?"Mensagem copiada — cole no Teams ✅":"Senha copiada ✅","ok"),()=>toast("Não foi possível copiar. Selecione e copie manualmente.","err"));
-}
+/* v22: reset pelo administrador — volta para a senha padrão (claro123), sem e-mail, e exige troca no próximo acesso */
 async function resetarSenha(id){
   if(!ME||ME.perfil!=="admin"){toast("Somente o administrador pode resetar senhas.","err");return;}
   const u=porId("users",id);if(!u)return;
   if(u.id===ME.id){toast("Para a sua própria senha, use o cadeado ao lado do seu nome (Trocar minha senha).","err");return;}
-  if(!confirm("Resetar a senha de "+u.nome+"?\n\nO sistema vai gerar uma senha temporária para você repassar. A senha atual deixa de funcionar e a pessoa cria uma nova no próximo acesso."))return;
-  const pw=gerarSenhaTemp();
-  const {error}=await SB.rpc("resetar_senha",{alvo:id,nova:pw});
-  if(error){toast(/function|schema cache|does not exist/i.test(error.message)?"Função de reset não encontrada. Rode o script de ajuste no SQL Editor do Supabase.":msgErro(error),"err");return;}
-  registrarLog("Resetou a senha de "+u.nome+" (senha temporária gerada).");
-  fecharModal("mUser");mostrarTemp(u,pw,false);
+  if(!confirm("Resetar a senha de "+u.nome+" para a senha padrão ("+SENHA_PADRAO+")?\n\nA senha atual deixa de funcionar e a troca será exigida no próximo acesso."))return;
+  const {error}=await SB.rpc("resetar_senha",{alvo:id});
+  if(error){toast(msgErro(error),"err");return;}
+  registrarLog("Resetou a senha de "+u.nome+" para a padrão.");
+  fecharModal("mUser");toast("Senha de "+u.nome.split(" ")[0]+" resetada para "+SENHA_PADRAO+" ✅ Login: "+u.login,"ok");
 }
 /* ---------------- LIXEIRA (todos os perfis) ---------------- */
 function podeVerLix(x,dor){
@@ -1786,18 +1733,18 @@ function admCfg(){
     '<table class="ftbl"><thead><tr><th>Indicador desafio</th><th>Meta</th><th>Unidade (opcional)</th><th>Cor</th></tr></thead><tbody>'+
     c.desafios.map((d,i)=>'<tr><td><b>'+esc(d.k)+'</b></td><td style="width:140px"><input id="cfM'+i+'" value="'+esc(d.meta)+'"/></td><td style="width:160px"><input id="cfU'+i+'" value="'+esc(d.unid||"")+'" placeholder="Ex: %, pts"/></td><td style="width:90px"><input type="color" id="cfC'+i+'" value="'+esc(d.cor)+'" style="padding:2px;height:34px"/></td></tr>').join("")+
     '</tbody></table></div>'+
-    '<div class="pane-card"><div class="grid2"><div class="field"><label>Organização</label><input id="cfOrg" value="'+esc(c.org||"")+'"/></div><div class="field"><label>Tamanho mínimo da senha</label><input id="cfMin" type="number" min="4" value="'+esc(c.minSenha||6)+'"/></div>'+
+    '<div class="pane-card"><div class="grid2"><div class="field"><label>Organização</label><input id="cfOrg" value="'+esc(c.org||"")+'"/></div><div class="field"><label>Tamanho mínimo da senha</label><input id="cfMin" type="number" min="6" value="'+esc(c.minSenha||6)+'"/></div>'+
     '<div class="field full"><label>Áreas <span class="h">— uma por linha (sugestões nos campos Área)</span></label><textarea id="cfAreas" style="min-height:110px">'+esc((c.areas||[]).join("\n"))+'</textarea></div></div>'+
     '<div style="margin-top:12px;text-align:right"><button class="btn primary" onclick="salvarCfg()">Salvar configurações</button></div></div>'+
     '<div class="pane-card"><h4 style="font-size:11px;text-transform:uppercase;color:var(--soft);margin-bottom:12px">Banco de dados</h4>'+
     '<div class="info" style="margin-bottom:14px"><div><label>Banco conectado</label>Supabase · online</div><div><label>Última atualização</label>'+fmtDH(DB.meta.atualizado)+'</div>'+
-    '<div><label>Registros</label>'+vivos("oportunidades").length+' dores · '+vivos("acoes").length+' ações · '+vivos("indicadores").length+' indicadores</div><div><label>Criado em</label>'+fmtDH(DB.meta.criado)+'</div></div>'+
+    '<div><label>Registros</label>'+vivos("oportunidades").length+' dores · '+vivos("acoes").length+' ações · '+vivos("indicadores").length+' indicadores</div><div><label>Usuários</label>'+vivos("users").length+'</div></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="baixarBackup()">⬇️ Baixar backup (.json)</button><button class="btn" onclick="$(\'impBk\').click()">⤴️ Mesclar um backup</button><input type="file" id="impBk" accept=".json" class="hidden" onchange="mesclarBackup(event)"/><button class="btn" onclick="cliqueSync()">🔁 Atualizar dados agora</button></div></div>';
 }
 function salvarCfg(){
   const c=DB.cfg;
   c.desafios.forEach((d,i)=>{d.meta=$("cfM"+i).value.trim();d.unid=$("cfU"+i).value.trim();d.cor=$("cfC"+i).value;});
-  c.org=$("cfOrg").value.trim();c.minSenha=Math.max(4,parseInt($("cfMin").value)||6);
+  c.org=$("cfOrg").value.trim();c.minSenha=Math.max(6,parseInt($("cfMin").value)||6);
   c.areas=$("cfAreas").value.split("\n").map(s=>s.trim()).filter(Boolean);
   c.upd=agora();registrarLog("Atualizou as configurações.");renderTudo();toast("Configurações salvas ✅","ok");
 }
@@ -1809,24 +1756,7 @@ function mesclarBackup(ev){
     d.users=[];d.log=[];const _us=DB.users,_lg=DB.log;DB=mesclar(DB,d);DB.users=_us;DB.log=_lg;registrarLog("Mesclou um backup no banco.");renderTudo();toast("Backup mesclado ✅","ok");}catch(err){toast("Backup inválido: "+err.message,"err");}ev.target.value="";};
   r.readAsText(f);
 }
-
-(async function(){
-  $("glGoals2").innerHTML=metasHTML();
-  irParaLogin();
-  if(!SB){erroLogin("Não foi possível carregar a conexão com o banco (Supabase). Verifique a internet e recarregue a página.");return;}
-  SB.auth.onAuthStateChange((ev)=>{
-    if(ev==="PASSWORD_RECOVERY"){RECUPERACAO=true;if(ME)setTimeout(()=>{RECUPERACAO=false;abrirTrocaSenha(true);},0);}
-    if(ev==="SIGNED_OUT"&&ME){ME=null;pararRealtime();pararPolling();setTimeout(irParaLogin,0);}
-  });
-  try{
-    const {data}=await SB.auth.getSession();
-    if(data&&data.session&&data.session.user){
-      setTimeout(()=>{},0);
-      await iniciarSessao(data.session.user,false);
-    }
-  }catch(e){console.warn("[sessão]",e);}
-})();
-/* ---------------- GLOSSÁRIO (v15) ---------------- */
+/* ---------------- GLOSSÁRIO ---------------- */
 const GLOSSARIO=[
  {g:"Estrutura da governança",itens:[
   ["Indicador desafio","Os três grandes resultados que orientam o trabalho: NPS, Receita e Margem EBITDA, com as metas 70 · 70 · 50. Cada dor é ligada a um deles."],
@@ -1873,8 +1803,9 @@ const GLOSSARIO=[
   ["Perfil Usuário","Visualiza tudo; edita as dores que criou e as compartilhadas com ele."],
   ["Perfil Gestor","Visualiza tudo, filtra por responsável; edita as dores que criou e as compartilhadas com ele."],
   ["Perfil Administrador","Edita e exclui tudo, acessa o Painel Admin, gerencia perfis e reseta senhas. O primeiro cadastro do sistema vira Administrador."],
-  ["Acesso e senha","O login é feito com e-mail e senha. A ferramenta não envia e-mails. Esqueceu a senha? O administrador gera uma senha temporária no Painel Admin; no acesso seguinte você cria uma senha própria."],
-  ["Senha temporária","Senha gerada pelo administrador ao criar um usuário ou resetar a senha (ex.: Claro-K7M3P9). Vale só para o próximo acesso: a troca é obrigatória."],
+  ["Acesso","A entrada é feita com o usuário (login) e a senha. O e-mail é pedido só no cadastro; a ferramenta não envia e-mails. Use o olhinho ao lado da senha para conferir o que foi digitado."],
+  ["Esqueci a senha","Solicite ao administrador o reset. A senha volta para a padrão (claro123) e, no próximo acesso, o sistema pede para você criar uma senha pessoal."],
+  ["Senha padrão","claro123 — usada no 1º acesso de quem foi cadastrado pelo administrador e após um reset. A troca é obrigatória."],
   ["Lixeira","Guarda dores, ações e indicadores excluídos para restaurar quando necessário."],
   ["Somente leitura","Aparece quando você não tem permissão de edição naquela dor. Você ainda pode abrir a dor e cada ação para consultar todos os detalhes."]]}
 ];
@@ -1891,6 +1822,35 @@ function renderGlo(){
   if(!n)h+='<div class="pane-card empty">Nenhum termo encontrado.</div>';
   $("content").innerHTML=h;
 }
+
+/* v24: colar dados do Excel no preenchimento mensal (linha, coluna ou bloco) */
+document.addEventListener("paste",function(e){
+  const el=e.target;if(!el||!el.id)return;
+  const m=el.id.match(/^in_(meta|real|fc|ant)_(\d+)$/);if(!m)return;
+  const txt=(e.clipboardData||window.clipboardData).getData("text");
+  if(!txt||!/[\t\n\r]/.test(txt.replace(/[\r\n]+$/,"")))return;
+  e.preventDefault();
+  const LIN=["meta","real","fc","ant"],r0=LIN.indexOf(m[1]),c0=parseInt(m[2]);
+  const rows=txt.replace(/\r/g,"").replace(/\n+$/,"").split("\n");
+  let n=0;
+  rows.forEach((row,ri)=>{const r=r0+ri;if(r>=LIN.length)return;
+    row.split("\t").forEach((v,ci)=>{const c=c0+ci;if(c>11)return;const inp=$("in_"+LIN[r]+"_"+c);if(inp){inp.value=v.trim().replace(/%$/,"").trim();n++;}});});
+  toast(n+" célula(s) preenchida(s) ✅","ok");
+});
+/* ---------------- INÍCIO ---------------- */
+(async function(){
+  ocultarSenhas();
+  $("glGoals2").innerHTML=metasHTML();
+  irParaLogin();
+  if(!SB){erroLogin("Não foi possível carregar a conexão com o banco (Supabase). Verifique a internet e recarregue a página.");return;}
+  SB.auth.onAuthStateChange((ev)=>{
+    if(ev==="SIGNED_OUT"&&ME){ME=null;pararRealtime();pararPolling();setTimeout(irParaLogin,0);}
+  });
+  try{
+    const {data}=await SB.auth.getSession();
+    if(data&&data.session&&data.session.user)await iniciarSessao(data.session.user,false);
+  }catch(e){console.warn("[sessão]",e);}
+})();
 </script>
 </body>
 </html>
